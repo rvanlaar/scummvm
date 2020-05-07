@@ -427,8 +427,13 @@ bool RIFXArchive::openStream(Common::SeekableReadStream *stream, uint32 startOff
 	resources.reserve(2048);
 
 	// Need to look for these two resources
-	const Resource *keyRes = 0;
-	const Resource *casRes = 0;
+	const Resource *origKeyRes = 0;
+	const Resource *origCasRes = 0;
+	int casId;
+	Resource casResObject;
+	Resource *casRes = &casResObject;
+	Resource keyResObject;
+	Resource *keyRes = &keyResObject;
 
 	for (uint32 i = 0; i < resCount; i++) {
 		uint32 tag = subStream.readUint32();
@@ -452,10 +457,20 @@ bool RIFXArchive::openStream(Common::SeekableReadStream *stream, uint32 startOff
 			return openStream(stream, offset);
 
 		// Looking for two types here
-		if (tag == MKTAG('K', 'E', 'Y', '*'))
-			keyRes = &resources[resources.size() - 1];
-		else if (tag == MKTAG('C', 'A', 'S', '*'))
-			casRes = &resources[resources.size() - 1];
+		if (tag == MKTAG('K', 'E', 'Y', '*')) {
+			origKeyRes = &resources[resources.size() - 1];
+			keyResObject.offset = offset;
+			keyResObject.size = size;
+			keyResObject.tag = tag;
+		}
+		else if (tag == MKTAG('C', 'A', 'S', '*')){
+			origCasRes = &resources[resources.size() - 1];
+			casResObject.offset = offset;
+			casResObject.size = size;
+			casResObject.tag = tag;
+			casId = resources.size() - 1;
+			debug(2, "casRes Triggered");
+		}
 		// or the children of
 		else if (tag == MKTAG('S', 'T', 'X', 'T') ||
 				 tag == MKTAG('B', 'I', 'T', 'D') ||
