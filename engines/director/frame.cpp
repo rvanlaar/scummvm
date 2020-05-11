@@ -296,6 +296,10 @@ void Frame::readChannels(Common::ReadStreamEndian *stream) {
 			sprite._currentPoint = sprite._startPoint;
 
 			sprite._height = stream->readUint16();
+			if (sprite._height == 47552 ){
+				warning("Frame::readChannels(): Sprite %d: Setting height %d to 0", i, sprite._height);
+				sprite._height = 0;
+			}
 			sprite._width = stream->readUint16();
 
 			if (_vm->getVersion() == 4) {
