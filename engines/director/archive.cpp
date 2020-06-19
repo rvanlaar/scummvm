@@ -21,7 +21,7 @@
  */
 
 /*
- * Test buildbot with comment
+ * Test buildbot with comment again
  */
 
 #include "common/config-manager.h"
