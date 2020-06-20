@@ -2,7 +2,7 @@
 
 For more information, compatibility lists, details on donating, the
 latest release, progress reports and more, please visit the ScummVM home
-page at: <https://www.scummvm.org/>
+page at: <https://www.scummvm.org/> TEST CHANGE
 
 ## Table of Contents:
 
