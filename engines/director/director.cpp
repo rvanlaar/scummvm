@@ -20,6 +20,8 @@
  *
  */
 
+#include <unistd.h>
+
 #include "common/config-manager.h"
 #include "common/debug-channels.h"
 #include "common/error.h"
@@ -35,6 +37,8 @@
 #include "director/sound.h"
 #include "director/stage.h"
 #include "director/lingo/lingo.h"
+
+
 
 namespace Director {
 
@@ -62,6 +66,7 @@ DirectorEngine::DirectorEngine(OSystem *syst, const DirectorGameDescription *gam
 	DebugMan.addDebugChannel(kDebugPreprocess, "preprocess", "Lingo preprocessing");
 	DebugMan.addDebugChannel(kDebugScreenshot, "screenshot", "screenshot each frame");
 	DebugMan.addDebugChannel(kDebugDesktop, "desktop", "Show the Classic Mac desktop");
+    sleep(30);
 
 	g_director = this;
 
