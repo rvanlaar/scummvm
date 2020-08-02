@@ -170,7 +170,9 @@ public:
 
 	DirectorGameGID getGameGID() const;
 	const char *getGameId() const;
-	uint16 getVersion() const;
+	uint16 getDescriptionVersion() const;
+	uint16 getVersion() const { return _version; }
+	void setVersion(uint16 version) { _version = version; }
 	Common::Platform getPlatform() const;
 	Common::Language getLanguage() const;
 	Common::String getEXEName() const;
@@ -239,6 +241,7 @@ private:
 	byte *_currentPalette;
 	uint16 _currentPaletteLength;
 	Lingo *_lingo;
+	uint16 _version;
 
 	Stage *_mainStage;
 	Datum *_windowList; // Lingo list
