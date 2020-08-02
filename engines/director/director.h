@@ -28,6 +28,7 @@
 
 #include "common/hashmap.h"
 #include "engines/engine.h"
+#include "engines/advancedDetector.h"
 
 #include "common/hash-ptr.h"
 #include "common/hash-str.h"
@@ -121,6 +122,13 @@ struct MacShape {
 	Graphics::MacPlotData *pd;
 };
 
+struct DirectorGameDescription {
+	ADGameDescription desc;
+
+	DirectorGameGID gameGID;
+	uint16 version;
+};
+
 // An extension of MacPlotData for interfacing with inks and patterns without
 // needing extra surfaces.
 struct DirectorPlotData {
@@ -170,7 +178,8 @@ public:
 
 	DirectorGameGID getGameGID() const;
 	const char *getGameId() const;
-	uint16 getVersion() const;
+	uint16 getVersion() const { return _version; }
+	void setVersion(uint16 version);
 	Common::Platform getPlatform() const;
 	Common::Language getLanguage() const;
 	Common::String getEXEName() const;
@@ -239,6 +248,7 @@ private:
 	byte *_currentPalette;
 	uint16 _currentPaletteLength;
 	Lingo *_lingo;
+	uint16 _version;
 
 	Stage *_mainStage;
 	Datum *_windowList; // Lingo list

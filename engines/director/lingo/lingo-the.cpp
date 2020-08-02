@@ -153,6 +153,7 @@ TheEntity entities[] = {
 	{ kTheUpdateMovieEnabled,"updateMovieEnabled",false,4 },//			D4 p
 	{ kTheWindow,			"window",			true,  4 },	//			D4
 	{ kTheWindowList,		"windowList",		false, 4 },	//			D4 p
+	{ kTheScummvmVersion,	"scummvmVersion",	false, 2 }, // 					ScummVM only p
 	{ kTheNOEntity, NULL, false, 0 }
 };
 
@@ -809,6 +810,10 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	case kTheUpdateMovieEnabled:
 		getTheEntitySTUB(kTheUpdateMovieEnabled);
 		break;
+	case kTheScummvmVersion:
+		d.type = INT;
+		d.u.i = _vm->getVersion();
+		break;
 	case kTheWindow:
 		g_lingo->push(id);
 		LB::b_window(1);
@@ -1025,6 +1030,10 @@ void Lingo::setTheEntity(int entity, Datum &id, int field, Datum &d) {
 		break;
 	case kTheUpdateMovieEnabled:
 		setTheEntitySTUB(kTheUpdateMovieEnabled);
+		break;
+	case kTheScummvmVersion:
+		// Allow director version change: used for testing version differences via the lingo tests.
+		_vm->setVersion(d.asInt());
 		break;
 	case kTheWindow:
 		g_lingo->push(id);

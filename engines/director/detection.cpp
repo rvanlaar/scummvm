@@ -31,13 +31,6 @@
 
 namespace Director {
 
-struct DirectorGameDescription {
-	ADGameDescription desc;
-
-	DirectorGameGID gameGID;
-	uint16 version;
-};
-
 DirectorGameGID DirectorEngine::getGameGID() const {
 	return _gameDescription->gameGID;
 }
@@ -50,8 +43,8 @@ Common::Platform DirectorEngine::getPlatform() const {
 	return _gameDescription->desc.platform;
 }
 
-uint16 DirectorEngine::getVersion() const {
-	return _gameDescription->version;
+void DirectorEngine::setVersion(uint16 version) {
+	_version = version;
 }
 
 Common::Language DirectorEngine::getLanguage() const {

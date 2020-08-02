@@ -144,6 +144,7 @@ enum TheEntityType {
 	kTheWindow,
 	kTheWindowList,
 	kTheWords,
+	kTheScummvmVersion,			// set the Director version via tests
 	kTheMaxTheEntityType		// This must be always last
 };
 
