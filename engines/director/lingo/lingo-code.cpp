@@ -1166,12 +1166,51 @@ void LC::c_lineToOf() {
 }
 
 void LC::c_wordOf() {
-	Datum d2 = g_lingo->pop();
-	Datum d1 = g_lingo->pop();
+	Datum d2 = g_lingo->pop(); // chunkExpression
+	Datum d1 = g_lingo->pop(); // index
 
-	warning("STUB: LC::c_wordOf(): %d %d", d1.u.i, d2.u.i);
+	if ((d1.type != INT && d1.type != FLOAT) ||  (d2.type != STRING && d2.type != FIELDREF)) {
+		warning("LC::c_wordOf(): Called with wrong data types: %s and %s", d1.type2str(), d2.type2str());
+		g_lingo->push(Datum(""));
+		return;
+	}
 
-	g_lingo->push(d1);
+	int index = d1.asInt();
+
+	if (index < 1) {
+		// returns the input string
+		g_lingo->push(d2);
+		return;
+	}
+		
+
+	Common::String chunkExpr = d2.asString();
+	uint size = chunkExpr.size();
+	uint startPos = 0;
+
+	while (index-- > 1) {
+		for (; startPos < size - 1; startPos++) {
+			if (Common::isSpace(chunkExpr[startPos]) && !Common::isSpace(chunkExpr[startPos + 1])){
+				startPos++;// skipping space
+				break;
+
+			}
+		}
+	}
+
+	Datum res;
+	if (startPos == size - 1) {
+		res = Datum("");
+	} else {
+		uint endPos = startPos + 1;
+		for (;endPos < size; endPos++) {
+			if (Common::isSpace(chunkExpr[endPos]))
+				break;
+		}
+		res = Datum(chunkExpr.substr(startPos, endPos - startPos));
+	}
+
+	g_lingo->push(res);
 }
 
 void LC::c_wordToOf() {
