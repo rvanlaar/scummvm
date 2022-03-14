@@ -20,6 +20,9 @@
  */
 
 #include "common/system.h"
+#include "common/translation.h"
+
+#include "gui/message.h"
 
 #include "graphics/macgui/macwindowmanager.h"
 
@@ -80,8 +83,17 @@ bool DirectorEngine::processEvents(bool captureClick) {
 	return false;
 }
 
-void DirectorEngine::processEventQUIT() {
-	_stage->getCurrentMovie()->getScore()->_playState = kPlayStopped;
+bool DirectorEngine::processEventQUIT() {
+	Common::U32String message = _("Could not initialize color format.");
+	GUI::MessageDialog dialog(message, _("OK"), _("Cancel"));
+	switch (dialog.runModal()) {
+	case GUI::kMessageOK:
+		_stage->getCurrentMovie()->getScore()->_playState = kPlayStopped;
+		break;
+	default:
+		return false;
+	}
+	return false;
 }
 
 bool Window::processEvent(Common::Event &event) {

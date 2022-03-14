@@ -249,7 +249,7 @@ public:
 
 	// events.cpp
 	bool processEvents(bool captureClick = false);
-	void processEventQUIT();
+	bool processEventQUIT();
 	uint32 getMacTicks();
 
 public:
