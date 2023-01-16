@@ -40,6 +40,11 @@ ifeq ($(ENABLE_ULTIMA), STATIC_PLUGIN)
 	TEST_LIBS += engines/ultima/libultima.a
 endif
 
+ifeq ($(ENABLE_DIRECTOR), STATIC_PLUGIN)
+	TESTS += $(srcdir)/test/engines/director/*.h
+	TEST_LIBS += engines/director/libdirector.a
+endif
+
 #
 TEST_FLAGS   := --runner=StdioPrinter --no-std --no-eh
 TEST_CFLAGS  := $(CFLAGS) -I$(srcdir)/test/cxxtest
