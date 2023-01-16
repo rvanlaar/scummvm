@@ -30,6 +30,7 @@
 #include "director/castmember.h"
 #include "director/cursor.h"
 #include "director/channel.h"
+#include "director/filepaths.h"
 #include "director/movie.h"
 #include "director/score.h"
 #include "director/sprite.h"
@@ -546,7 +547,7 @@ bool DigitalVideoCastMember::loadVideo(Common::String path) {
 	_filename = path;
 	_video = new Video::QuickTimeDecoder();
 
-	Common::String path1 = pathMakeRelative(path);
+	Common::String path1 = getPath(path);
 
 	debugC(2, kDebugLoading | kDebugImages, "Loading video %s -> %s", path.c_str(), path1.c_str());
 	bool result = _video->loadFile(Common::Path(path1, g_director->_dirSeparator));
@@ -689,7 +690,7 @@ uint DigitalVideoCastMember::getDuration() {
 	if (!_video || !_video->isVideoLoaded()) {
 		Common::String path = getCast()->getVideoPath(_castId);
 		if (!path.empty())
-			loadVideo(pathMakeRelative(path));
+			loadVideo(getPath(path));
 
 		_duration = getMovieTotalTime();
 	}

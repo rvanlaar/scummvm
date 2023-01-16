@@ -28,6 +28,7 @@
 
 #include "director/director.h"
 #include "director/cast.h"
+#include "director/filepaths.h"
 #include "director/lingo/lingo.h"
 #include "director/movie.h"
 #include "director/window.h"
@@ -242,7 +243,7 @@ void Window::setVisible(bool visible, bool silent) {
 }
 
 bool Window::setNextMovie(Common::String &movieFilenameRaw) {
-	Common::String movieFilename = pathMakeRelative(movieFilenameRaw);
+	Common::String movieFilename = getPath(movieFilenameRaw);
 
 	bool fileExists = false;
 	Common::File file;
@@ -302,7 +303,7 @@ void Window::loadNewSharedCast(Cast *previousSharedCast) {
 bool Window::loadNextMovie() {
 	_soundManager->changingMovie();
 	_newMovieStarted = true;
-	_currentPath = getPath(_nextMovie.movie, _currentPath);
+	_currentPath = getOriginalPath(_nextMovie.movie, _currentPath);
 
 	Cast *previousSharedCast = nullptr;
 	if (_currentMovie) {

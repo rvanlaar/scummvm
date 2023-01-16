@@ -34,6 +34,7 @@
 
 #include "director/director.h"
 #include "director/archive.h"
+#include "director/filepaths.h"
 #include "director/movie.h"
 #include "director/window.h"
 #include "director/lingo/lingo.h"
@@ -109,7 +110,7 @@ void Window::testFontScaling() {
 		x += tile->getSurface()->w + 10;
 	}
 
-	Common::String path = pathMakeRelative("blend2.pic");
+	Common::String path = getPath("blend2.pic");
 	Common::File in;
 	in.open(path);
 

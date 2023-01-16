@@ -9,6 +9,7 @@ MODULE_OBJS = \
 	director.o \
 	debugger.o \
 	events.o \
+	filepaths.o \
 	fonts.o \
 	frame.o \
 	game-quirks.o \

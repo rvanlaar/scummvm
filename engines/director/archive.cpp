@@ -27,6 +27,7 @@
 
 #include "director/director.h"
 #include "director/archive.h"
+#include "director/filepaths.h"
 #include "director/window.h"
 #include "director/util.h"
 

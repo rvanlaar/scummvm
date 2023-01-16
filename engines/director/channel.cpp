@@ -25,6 +25,7 @@
 #include "director/cursor.h"
 #include "director/cast.h"
 #include "director/channel.h"
+#include "director/filepaths.h"
 #include "director/sprite.h"
 #include "director/castmember.h"
 #include "director/types.h"
@@ -397,7 +398,7 @@ void Channel::setClean(Sprite *nextSprite, int spriteId, bool partial) {
 				Common::String path = nextSprite->_cast->getCast()->getVideoPath(nextSprite->_castId.member);
 
 				if (!path.empty()) {
-					((DigitalVideoCastMember *)nextSprite->_cast)->loadVideo(pathMakeRelative(path, true, false));
+					((DigitalVideoCastMember *)nextSprite->_cast)->loadVideo(getPath(path));
 					((DigitalVideoCastMember *)nextSprite->_cast)->startVideo(this);
 				}
 			} else if (nextSprite->_cast->_type == kCastFilmLoop) {

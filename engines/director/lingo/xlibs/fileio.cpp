@@ -86,6 +86,7 @@
 #include "common/savefile.h"
 
 #include "director/director.h"
+#include "director/filepaths.h"
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/xlibs/fileio.h"
@@ -234,7 +235,7 @@ void FileIO::m_new(int nargs) {
 			// Maybe we're trying to read one of the game files
 			Common::File *f = new Common::File;
 
-			if (!f->open(Common::Path(pathMakeRelative(origpath), g_director->_dirSeparator))) {
+			if (!f->open(Common::Path(getPath(origpath), g_director->_dirSeparator))) {
 				delete f;
 				saveFileError();
 				me->dispose();

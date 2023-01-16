@@ -29,6 +29,7 @@
 #include "director/castmember.h"
 #include "director/cursor.h"
 #include "director/channel.h"
+#include "director/filepaths.h"
 #include "director/frame.h"
 #include "director/movie.h"
 #include "director/sound.h"
@@ -1434,7 +1435,7 @@ void Lingo::setTheSprite(Datum &id1, int field, Datum &d) {
 			if (castMember && castMember->_type == kCastDigitalVideo) {
 				Common::String path = castMember->getCast()->getVideoPath(castId.member);
 				if (!path.empty()) {
-					((DigitalVideoCastMember *)castMember)->loadVideo(pathMakeRelative(path));
+					((DigitalVideoCastMember *)castMember)->loadVideo(getPath(path));
 					((DigitalVideoCastMember *)castMember)->startVideo(channel);
 					// b_updateStage needs to have _videoPlayback set to render video
 					// in the regular case Score::renderSprites sets it.

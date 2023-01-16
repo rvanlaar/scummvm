@@ -31,6 +31,7 @@
 #include "director/director.h"
 #include "director/cast.h"
 #include "director/castmember.h"
+#include "director/filepaths.h"
 #include "director/frame.h"
 #include "director/movie.h"
 #include "director/score.h"
@@ -1143,7 +1144,10 @@ void LB::b_closeXlib(int nargs) {
 
 void LB::b_getNthFileNameInFolder(int nargs) {
 	int fileNum = g_lingo->pop().asInt() - 1;
-	Common::String path = pathMakeRelative(g_lingo->pop().asString(), true, false, true);
+	// TODO: old getRelative path call
+	// Common::String path = getPath(g_lingo->pop().asString(), true, false, true);
+	Common::String path = getPath(g_lingo->pop().asString());
+
 	// for directory, we either return the correct path, which we can access recursively.
 	// or we get a wrong path, which will lead us to a non-exist file node
 
@@ -1205,7 +1209,7 @@ void LB::b_openResFile(int nargs) {
 	if (!g_director->_allOpenResFiles.contains(resPath)) {
 		MacArchive *resFile = new MacArchive();
 
-		if (resFile->openFile(pathMakeRelative(resPath))) {
+		if (resFile->openFile(getPath(resPath))) {
 			// Track responsibility. closeResFile may only close resource files opened by openResFile.
 			g_director->_openResFiles.setVal(resPath, resFile);
 			g_director->_allOpenResFiles.setVal(resPath, resFile);
@@ -1227,7 +1231,7 @@ void LB::b_openXlib(int nargs) {
 		if (!g_director->_allOpenResFiles.contains(resPath)) {
 			MacArchive *resFile = new MacArchive();
 
-			if (resFile->openFile(pathMakeRelative(resPath))) {
+			if (resFile->openFile(getPath(resPath))) {
 				g_director->_allOpenResFiles.setVal(resPath, resFile);
 				uint32 XCOD = MKTAG('X', 'C', 'O', 'D');
 				uint32 XCMD = MKTAG('X', 'C', 'M', 'D');
@@ -1968,7 +1972,7 @@ void LB::b_importFileInto(int nargs) {
 		return;
 	}
 
-	Common::String path = pathMakeRelative(file.asString());
+	Common::String path = getPath(file.asString());
 	Common::File in;
 	in.open(path);
 
@@ -2982,7 +2986,7 @@ void LB::b_sound(int nargs) {
 		TYPECHECK(firstArg, INT);
 		TYPECHECK(secondArg, STRING);
 
-		soundManager->playFile(pathMakeRelative(*secondArg.u.s), firstArg.u.i);
+		soundManager->playFile(getPath(*secondArg.u.s), firstArg.u.i);
 	} else {
 		warning("b_sound: unknown verb %s", verb.u.s->c_str());
 	}

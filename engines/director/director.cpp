@@ -32,6 +32,7 @@
 #include "director/debugger.h"
 #include "director/archive.h"
 #include "director/cast.h"
+#include "director/filepaths.h"
 #include "director/movie.h"
 #include "director/score.h"
 #include "director/sound.h"

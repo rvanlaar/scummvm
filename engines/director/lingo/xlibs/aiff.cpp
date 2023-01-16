@@ -48,6 +48,7 @@
 #include "common/macresman.h"
 #include "audio/decoders/aiff.h"
 #include "director/director.h"
+#include "director/filepaths.h"
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/xlibs/aiff.h"
@@ -99,7 +100,7 @@ void AiffXObj::m_duration(int nargs) {
 	// Mac-ify any mac-paths to make them at least consistent:
 	Common::replace(filePath, "\\", ":");
 
-	auto aiffStream = Common::MacResManager::openFileOrDataFork(Common::Path(pathMakeRelative(filePath), g_director->_dirSeparator));
+	auto aiffStream = Common::MacResManager::openFileOrDataFork(Common::Path(getPath(filePath), g_director->_dirSeparator));
 	if (!aiffStream) {
 		error("Failed to open %s", filePath.c_str());
 	}

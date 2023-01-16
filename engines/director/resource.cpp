@@ -30,6 +30,7 @@
 #include "director/director.h"
 #include "director/cast.h"
 #include "director/castmember.h"
+#include "director/filepaths.h"
 #include "director/movie.h"
 #include "director/window.h"
 #include "director/lingo/lingo.h"
@@ -65,7 +66,7 @@ Common::Error Window::loadInitialMovie() {
 	}
 
 	_currentMovie = new Movie(this);
-	_currentPath = getPath(movie, _currentPath);
+	_currentPath = getOriginalPath(movie, _currentPath);
 	Common::String sharedCastPath = getSharedCastPath();
 	if (!sharedCastPath.empty() && !sharedCastPath.equalsIgnoreCase(movie))
 		_currentMovie->loadSharedCastsFrom(sharedCastPath);
@@ -147,7 +148,7 @@ void Window::probeMacBinary(MacArchive *archive) {
 				error("No strings in Projector file");
 
 			Common::String sname = decodePlatformEncoding(name->readPascalString());
-			Common::String moviePath = pathMakeRelative(sname);
+			Common::String moviePath = getPath(sname);
 			if (testPath(moviePath)) {
 				_nextMovie.movie = moviePath;
 				warning("Replaced score name with: %s (from %s)", _nextMovie.movie.c_str(), sname.c_str());

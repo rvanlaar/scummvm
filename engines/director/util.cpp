@@ -335,6 +335,8 @@ Common::String CastMemberID::asString() const {
 	return res;
 }
 
+#ifdef OLDPATHS
+
 Common::String convertPath(Common::String &path) {
 	if (path.empty())
 		return path;
@@ -671,13 +673,7 @@ Common::String testExtensions(Common::String component, Common::String initialPa
 	return Common::String();
 }
 
-Common::String getFileName(Common::String path) {
-	while (path.contains(g_director->_dirSeparator)) {
-		int pos = path.find(g_director->_dirSeparator);
-		path = Common::String(&path.c_str()[pos + 1]);
-	}
-	return path;
-}
+#endif
 
 //////////////////
 ////// Mac --> Windows filename conversion

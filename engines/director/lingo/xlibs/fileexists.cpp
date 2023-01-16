@@ -31,11 +31,13 @@
 */
 
 #include "director/director.h"
+#include "director/filepaths.h"
 #include "director/lingo/lingo.h"
 #include "director/lingo/lingo-object.h"
 #include "director/lingo/xlibs/fileexists.h"
 #include "common/savefile.h"
 
+// TODO: Check if FileExists inner call can be changed to testPath
 
 namespace Director {
 
@@ -71,7 +73,7 @@ void FileExists::m_fileexists(int nargs) {
 	if (!(saves->exists(filename))) {
 		Common::File *f = new Common::File;
 
-		if (!f->open(Common::Path(pathMakeRelative(origpath), g_director->_dirSeparator))) {
+		if (!f->open(Common::Path(getPath(origpath), g_director->_dirSeparator))) {
 			g_lingo->push(Datum(false));
 			return;
 		}

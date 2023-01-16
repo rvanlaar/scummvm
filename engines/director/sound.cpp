@@ -36,6 +36,7 @@
 #include "director/director.h"
 #include "director/movie.h"
 #include "director/castmember.h"
+#include "director/filepaths.h"
 #include "director/sound.h"
 #include "director/util.h"
 #include "director/window.h"
@@ -805,7 +806,7 @@ Audio::AudioStream *AudioFileDecoder::getAudioStream(bool looping, bool forPuppe
 	if (_path.empty())
 		return nullptr;
 
-	Common::Path filePath = Common::Path(pathMakeRelative(_path), g_director->_dirSeparator);
+	Common::Path filePath = Common::Path(getPath(_path), g_director->_dirSeparator);
 
 	Common::SeekableReadStream *copiedStream = Common::MacResManager::openFileOrDataFork(filePath);
 
