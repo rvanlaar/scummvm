@@ -33,6 +33,7 @@
 #include "director/archive.h"
 #include "director/cast.h"
 #include "director/movie.h"
+#include "director/path.h"
 #include "director/score.h"
 #include "director/sound.h"
 #include "director/window.h"
@@ -56,14 +57,14 @@ DirectorEngine::DirectorEngine(OSystem *syst, const DirectorGameDescription *gam
 	g_debugger = new Debugger();
 	setDebugger(g_debugger);
 
-	// parseOptions depends on the _dirSeparator
 	_version = getDescriptionVersion();
+	_pathLib = new PathLib(getPlatform(), _version);
+	// parseOptions depends on the _dirSeparator
 	if (getPlatform() == Common::kPlatformWindows && _version >= 400) {
 		_dirSeparator = '\\';
 	} else {
 		_dirSeparator = ':';
 	}
-
 	parseOptions();
 
 	// Setup mixer

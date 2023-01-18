@@ -63,6 +63,7 @@ class Lingo;
 class Movie;
 class Window;
 class Score;
+class PathLib;
 class Channel;
 class CastMember;
 class Stxt;
@@ -263,6 +264,7 @@ private:
 	uint16 _currentPaletteLength;
 	Lingo *_lingo;
 	uint16 _version;
+	PathLib *_pathLib;
 
 	Window *_stage;
 	Datum *_windowList; // Lingo list

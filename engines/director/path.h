@@ -22,19 +22,28 @@
 #ifndef DIRECTOR_PATH_H
 #define DIRECTOR_PATH_H
 
-namespace Common {
-class String;
-}
+#include "common/inttypes.h"
+#include "common/str.h"
+#include "common/path.h"
+#include "common/platform.h"
 
 namespace Director {
 
-struct PathVar {
-    uint16 version;
-    Common::Platform platform;
-    char getDirSeparator();
+class PathLib {
+
+public: 
+    PathLib(Common::Platform platform, uint16 version);
+    char getDirSeparator() { return _dirSeperator; }
+
+    Path(const Common::String &str);
+
+private: 
+    char _dirSeperator;
 };
 
-bool testNewPath(Common::String path, PathVar var);
+class DPath : Common::Path {
+    
+}
 
 } // End of namespace Director
 

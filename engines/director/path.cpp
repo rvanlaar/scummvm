@@ -26,14 +26,15 @@
 
 namespace Director {
 
-char PathVar::getDirSeparator() {
-	if (platform == Common::kPlatformWindows) 
-		return '\\';
-	return ':';
+PathLib::PathLib(Common::Platform platform, uint16 version) {
+	if (platform == Common::kPlatformWindows && version >= 400)
+		_dirSeperator = '\\';
+	else 
+		_dirSeperator = ':';
 }
 
-bool testNewPath(Common::String path, PathVar vars) {
-	return path.contains(vars.getDirSeparator());
+PathLib::Path(const Common::String &str) {
+	
 }
 
 } // End of namespace Director
