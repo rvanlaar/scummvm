@@ -21,10 +21,23 @@
 
 #include "common/str.h"
 #include "common/platform.h"
+#include "common/path.h"
 
 #include "director/path.h"
+#include "director/director.h"
 
 namespace Director {
+
+DirectorPath::DirectorPath(const Common::String &str) {
+	char separator = g_director->_dirSeparator;
+	set(str.c_str(), separator);
+}
+
+Common::String DirectorPath::toDirector() const {
+	char separator = g_director->_dirSeparator;
+	return toString(separator);
+}
+
 
 PathLib::PathLib(Common::Platform platform, uint16 version) {
 	if (platform == Common::kPlatformWindows && version >= 400)
@@ -33,8 +46,6 @@ PathLib::PathLib(Common::Platform platform, uint16 version) {
 		_dirSeperator = ':';
 }
 
-PathLib::Path(const Common::String &str) {
-	
-}
+
 
 } // End of namespace Director

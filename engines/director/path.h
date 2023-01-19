@@ -29,21 +29,23 @@
 
 namespace Director {
 
+class DirectorPath : Common::Path {
+public:
+    DirectorPath(const Common::String &str);
+    Common::String toDirector() const;
+};
+
 class PathLib {
 
 public: 
     PathLib(Common::Platform platform, uint16 version);
     char getDirSeparator() { return _dirSeperator; }
 
-    Path(const Common::String &str);
-
 private: 
     char _dirSeperator;
 };
 
-class DPath : Common::Path {
-    
-}
+
 
 } // End of namespace Director
 
