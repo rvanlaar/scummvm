@@ -31,6 +31,7 @@
 #include "director/cast.h"
 #include "director/castmember.h"
 #include "director/movie.h"
+#include "director/path.h"
 #include "director/window.h"
 #include "director/lingo/lingo.h"
 #include "director/util.h"

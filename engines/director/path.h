@@ -41,6 +41,10 @@ public:
     PathLib(Common::Platform platform, uint16 version);
     char getDirSeparator() { return _dirSeperator; }
 
+    Common::Path fromD(const Common::String &path) {
+        return Common::Path(path, _dirSeperator);
+    }
+
 private: 
     char _dirSeperator;
 };

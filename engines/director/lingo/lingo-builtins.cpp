@@ -33,6 +33,7 @@
 #include "director/castmember.h"
 #include "director/frame.h"
 #include "director/movie.h"
+#include "director/path.h"
 #include "director/score.h"
 #include "director/sound.h"
 #include "director/sprite.h"
@@ -2973,7 +2974,8 @@ void LB::b_sound(int nargs) {
 		TYPECHECK(firstArg, INT);
 		TYPECHECK(secondArg, STRING);
 
-		soundManager->playFile(Common::Path(*secondArg.u.s), firstArg.u.i);
+		soundManager->playFile(
+			g_director->getPathLib()->fromD(*secondArg.u.s), firstArg.u.i);
 	} else {
 		warning("b_sound: unknown verb %s", verb.u.s->c_str());
 	}

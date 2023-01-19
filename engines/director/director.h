@@ -160,6 +160,7 @@ public:
 	const char *getGameId() const;
 	uint16 getDescriptionVersion() const;
 	uint16 getVersion() const { return _version; }
+	PathLib *getPathLib() { return _pathLib; }
 	void setVersion(uint16 version);
 	Common::Platform getPlatform() const;
 	Common::Language getLanguage() const;

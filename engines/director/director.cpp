@@ -59,12 +59,8 @@ DirectorEngine::DirectorEngine(OSystem *syst, const DirectorGameDescription *gam
 
 	_version = getDescriptionVersion();
 	_pathLib = new PathLib(getPlatform(), _version);
-	// parseOptions depends on the _dirSeparator
-	if (getPlatform() == Common::kPlatformWindows && _version >= 400) {
-		_dirSeparator = '\\';
-	} else {
-		_dirSeparator = ':';
-	}
+	_dirSeparator = _pathLib->getDirSeparator();
+
 	parseOptions();
 
 	// Setup mixer
@@ -140,8 +136,9 @@ DirectorEngine::~DirectorEngine() {
 	delete _lingo;
 	delete _wm;
 	delete _surface;
+	delete _pathLib;
 
-	for (Common::HashMap<Common::Path, Archive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo>::iterator it = _allOpenResFiles.begin(); it != _allOpenResFiles.end(); ++it) {
+	for (auto it = _allOpenResFiles.begin(); it != _allOpenResFiles.end(); ++it) {
 		delete it->_value;
 	}
 

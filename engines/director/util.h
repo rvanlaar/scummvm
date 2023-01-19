@@ -31,7 +31,7 @@ namespace Director {
 int castNumToNum(const char *str);
 char *numToCastNum(int num);
 
-Common::String convertPath(Common::String &path);
+Common::Path convertPath(Common::String &path);
 
 Common::String unixToMacPath(const Common::String &path);
 
@@ -45,7 +45,7 @@ Common::Path wrappedPathMakeRelative(Common::Path path, bool recursive = true, b
 
 bool hasExtension(Common::String filename);
 
-Common::String testExtensions(Common::String component, Common::String initialPath, Common::String convPath);
+Common::Path testExtensions(Common::String component, Common::Path initialPath, Common::String convPath);
 
 Common::Path getFileName(Common::Path path);
 
