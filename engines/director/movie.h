@@ -91,7 +91,7 @@ public:
 	bool loadArchive();
 	void setArchive(Archive *archive);
 	Archive *getArchive() const { return _movieArchive; };
-	Common::String getMacName() const { return _macName; }
+	Common::Path getMacName() const { return _macName; }
 	Window *getWindow() const { return _window; }
 	DirectorEngine *getVM() const { return _vm; }
 	Cast *getCast() const { return _casts.getValOrDefault(0, nullptr); }
@@ -99,7 +99,7 @@ public:
 	Score *getScore() const { return _score; }
 
 	void clearSharedCast();
-	void loadSharedCastsFrom(Common::String filename);
+	void loadSharedCastsFrom(Common::Path filename);
 
 	CastMember *getCastMember(CastMemberID memberID);
 	CastMember *createOrReplaceCastMember(CastMemberID memberID, CastMember *cast);
@@ -182,7 +182,7 @@ private:
 
 	uint32 _flags;
 
-	Common::String _macName;
+	Common::Path _macName;
 	Common::String _createdBy;
 	Common::String _changedBy;
 	Common::String _script;

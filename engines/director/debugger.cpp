@@ -220,7 +220,7 @@ bool Debugger::cmdMovie(int argc, const char **argv) {
 		Datum frame, mov(argv[1]);
 		lingo->func_goto(frame, mov);
 	} else {
-		debugPrintf("%s\n", movie->getArchive()->getFileName().c_str());
+		debugPrintf("%s\n", movie->getArchive()->getFileName().toString().c_str());
 	}
 	return true;
 }
@@ -773,7 +773,7 @@ void Debugger::bpUpdateState() {
 	_bpMatchFuncOffsets.clear();
 	_bpMatchFuncName.clear();
 	_bpMatchScriptId = 0;
-	_bpMatchMoviePath.clear();
+	_bpMatchMoviePath = Common::Path();
 	_bpMatchFrameOffsets.clear();
 	_bpCheckVarRead = false;
 	_bpCheckVarWrite = false;
@@ -807,7 +807,7 @@ void Debugger::bpUpdateState() {
 			}
 		} else if (it.type == kBreakpointMovie || it.type == kBreakpointMovieFrame) {
 			_bpCheckMoviePath = true;
-			if (it.moviePath.equalsIgnoreCase(movie->getArchive()->getFileName())) {
+			if (it.moviePath == movie->getArchive()->getFileName()) {
 				_bpNextMovieMatch |= it.type == kBreakpointMovie;
 				_bpMatchMoviePath = it.moviePath;
 				_bpMatchFrameOffsets.setVal(it.frameOffset, nullptr);
@@ -849,10 +849,10 @@ void Debugger::bpTest(bool forceCheck) {
 				if (it.funcName.equalsIgnoreCase(_bpMatchFuncName) && it.scriptId == _bpMatchScriptId && it.funcOffset == funcOffset)
 					debugPrintf("%s\n", it.format().c_str());
 			} else if (it.type == kBreakpointMovie && _bpNextMovieMatch) {
-				if (it.moviePath.equalsIgnoreCase(_bpMatchMoviePath))
+				if (it.moviePath == _bpMatchMoviePath)
 					debugPrintf("%s\n", it.format().c_str());
 			} else if (it.type == kBreakpointMovieFrame) {
-				if (it.moviePath.equalsIgnoreCase(_bpMatchMoviePath) && it.frameOffset == frameOffset)
+				if (it.moviePath == _bpMatchMoviePath && it.frameOffset == frameOffset)
 					debugPrintf("%s\n", it.format().c_str());
 			}
 		}

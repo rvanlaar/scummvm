@@ -278,7 +278,7 @@ void RearWindowXObj::m_indexColorToWindow(int nargs) {
 }
 
 void RearWindowXObj::m_getAppName(int nargs) {
-	g_lingo->push(Datum(g_director->getStartMovie().startMovie));
+	g_lingo->push(Datum(g_director->getStartMovie().startMovie.toString()));
 }
 
 void RearWindowXObj::m_rgbColorToWindow(int nargs) {

@@ -24,6 +24,7 @@
 #include "common/keyboard.h"
 #include "common/macresman.h"
 #include "common/memstream.h"
+#include "common/path.h"
 #include "common/punycode.h"
 #include "common/tokenizer.h"
 #include "common/compression/zlib.h"
@@ -336,6 +337,7 @@ Common::String CastMemberID::asString() const {
 }
 
 Common::String convertPath(Common::String &path) {
+
 	if (path.empty())
 		return path;
 
@@ -384,39 +386,39 @@ Common::String unixToMacPath(const Common::String &path) {
 	return res;
 }
 
-Common::String getPath(Common::String path, Common::String cwd) {
-	const char *s;
-	if ((s = strrchr(path.c_str(), g_director->_dirSeparator))) {
-		return Common::String(path.c_str(), s + 1);
-	}
-
+Common::Path getPath(Common::Path path, Common::Path cwd) {
+	// If variable path is a path and not just a filename, return it.
+	// used to switch to a new directory when a new movie is loaded.
+	Common::Path parent = path.getParent();
+	if (!parent.empty()) 
+		return parent;
 	return cwd; // The path is not altered
 }
 
-bool testPath(Common::String &path, bool directory) {
+bool testPath(Common::Path &path, bool directory) {
 	Common::FSNode d = Common::FSNode(*g_director->getGameDataDir());
 	Common::FSNode node;
 
 	// Test if we have it right in the SearchMan. Also accept MacBinary
 	// for Mac and Pippin
-	if (SearchMan.hasFile(Common::Path(path, g_director->_dirSeparator)) ||
+	if (SearchMan.hasFile(path) ||
 	    ((g_director->getPlatform() == Common::kPlatformMacintoshII
 	      || g_director->getPlatform() == Common::kPlatformMacintosh
 	      || g_director->getPlatform() == Common::kPlatformPippin) &&
-	     Common::MacResManager::exists(Common::Path(path, g_director->_dirSeparator))))
+	     Common::MacResManager::exists(path)))
 		return true;
 
-	debug(9, "testPath: %s  dir: %d", path.c_str(), directory);
+	debug(9, "testPath: %s  dir: %d", path.toString().c_str(), directory);
 
 	// check for the game data dir
-	if (!path.contains(g_director->_dirSeparator) && path.equalsIgnoreCase(d.getName())) {
+	if (path.getParent().empty() && path.toString().equalsIgnoreCase(d.getName())) {
 		if (!directory)
 			return false;
 		path = "";
 		return true;
 	}
 
-	Common::StringTokenizer directory_list(path, Common::String(g_director->_dirSeparator));
+	Common::StringTokenizer directory_list(path.toString(g_director->_dirSeparator), Common::String(g_director->_dirSeparator));
 	Common::String newPath;
 
 	Common::FSList fslist;
@@ -463,32 +465,33 @@ bool testPath(Common::String &path, bool directory) {
 }
 
 
-Common::String pathMakeRelative(Common::String path, bool recursive, bool addexts, bool directory) {
+Common::Path pathMakeRelative(Common::Path path, bool recursive, bool addexts, bool directory) {
 	//Wrap pathMakeRelative to search in extra paths defined by the game
-	Common::String foundPath;
+	Common::Path foundPath;
 
 	Datum searchPath = g_director->getLingo()->_searchPath;
 	if (searchPath.type == ARRAY && searchPath.u.farr->arr.size() > 0) {
 		for (uint i = 0; i < searchPath.u.farr->arr.size(); i++) {
-			Common::String searchIn = searchPath.u.farr->arr[i].asString();
-			debug(9, "pathMakeRelative(): searchPath: %s", searchIn.c_str());
+			Common::Path searchIn = Common::Path(searchPath.u.farr->arr[i].asString());
+			debug(9, "pathMakeRelative(): searchPath: %s", searchIn.toString().c_str());
+			searchIn.appendInPlace(path);
 
-			foundPath = wrappedPathMakeRelative(searchIn + path, recursive, addexts, directory);
+			foundPath = wrappedPathMakeRelative(searchIn, recursive, addexts, directory);
 			if (testPath(foundPath))
 				return foundPath;
 
-			debug(9, "pathMakeRelative(): -- searchPath not found: %s", foundPath.c_str());
+			debug(9, "pathMakeRelative(): -- searchPath not found: %s", foundPath.toString().c_str());
 		}
 	}
 
 	for (auto i = g_director->_extraSearchPath.begin(); i != g_director->_extraSearchPath.end(); ++i) {
-		debug(9, "pathMakeRelative(): extraSearchPath: %s", i->c_str());
-
-		foundPath = wrappedPathMakeRelative(*i + path, recursive, addexts, directory);
+		debug(9, "pathMakeRelative(): extraSearchPath: %s", i->toString().c_str());
+		Common::Path test_path = Common::Path(*i).joinInPlace(path);
+		foundPath = wrappedPathMakeRelative(test_path, recursive, addexts, directory);
 		if (testPath(foundPath))
 			return foundPath;
 
-		debug(9, "pathMakeRelative(): -- extraSearchPath not found: %s", foundPath.c_str());
+		debug(9, "pathMakeRelative(): -- extraSearchPath not found: %s", foundPath.toString().c_str());
 	}
 
 	return wrappedPathMakeRelative(path, recursive, addexts, directory);
@@ -498,142 +501,8 @@ Common::String pathMakeRelative(Common::String path, bool recursive, bool addext
 // if we are finding the file path, then this func will return exactly the executable file path
 // if we are finding the directory path, then we will get the path relative to the game data dir.
 // e.g. if we have game data dir as SSwarlock, then "A:SSwarlock" -> "", "A:SSwarlock:Nav" -> "Nav"
-Common::String wrappedPathMakeRelative(Common::String path, bool recursive, bool addexts, bool directory) {
-
-	Common::String initialPath(path);
-
-	debug(9, "wrappedPathMakeRelative(): s0 %s -> %s", path.c_str(), initialPath.c_str());
-
-	if (recursive) // first level
-		initialPath = convertPath(initialPath);
-
-	debug(9, "wrappedPathMakeRelative(): s1 %s -> %s", path.c_str(), initialPath.c_str());
-
-	initialPath = Common::normalizePath(g_director->getCurrentPath() + initialPath, g_director->_dirSeparator);
-	Common::String convPath = initialPath;
-
-	debug(9, "wrappedPathMakeRelative(): s2 %s", convPath.c_str());
-
-	if (testPath(initialPath, directory))
-		return initialPath;
-
-	debug(9, "wrappedPathMakeRelative(): s2.1 -- not found %s", initialPath.c_str());
-
-	// Now try to search the file
-	bool opened = false;
-
-	while (convPath.contains(g_director->_dirSeparator)) {
-		int pos = convPath.find(g_director->_dirSeparator);
-		convPath = Common::String(&convPath.c_str()[pos + 1]);
-
-		debug(9, "wrappedPathMakeRelative(): s3 try %s", convPath.c_str());
-
-		if (!testPath(convPath, directory)) {
-			// If we were supplied a path with subdirectories,
-			// attempt to combine it with the current movie path at every iteration
-			Common::String locPath = Common::normalizePath(g_director->getCurrentPath() + convPath, g_director->_dirSeparator);
-			debug(9, "wrappedPathMakeRelative(): s3.1 try %s", locPath.c_str());
-
-			if (!testPath(locPath, directory)) {
-				debug(9, "wrappedPathMakeRelative(): s3.1 -- not found %s", locPath.c_str());
-				continue;
-			}
-		}
-
-		debug(9, "wrappedPathMakeRelative(): s3 converted %s -> %s", path.c_str(), convPath.c_str());
-
-		opened = true;
-
-		break;
-	}
-
-	if (!opened) {
-		// Try stripping all of the characters not allowed in FAT
-		convPath = stripMacPath(initialPath.c_str());
-
-		debug(9, "wrappedPathMakeRelative(): s4 %s", convPath.c_str());
-
-		if (testPath(initialPath, directory))
-			return initialPath;
-
-		debug(9, "wrappedPathMakeRelative(): s4.1 -- not found %s", initialPath.c_str());
-
-		// Now try to search the file
-		while (convPath.contains(g_director->_dirSeparator)) {
-			int pos = convPath.find(g_director->_dirSeparator);
-			convPath = Common::String(&convPath.c_str()[pos + 1]);
-
-			debug(9, "wrappedPathMakeRelative(): s5 try %s", convPath.c_str());
-
-			if (!testPath(convPath, directory)) {
-				debug(9, "wrappedPathMakeRelative(): s5 -- not found %s", convPath.c_str());
-				continue;
-			}
-
-			debug(9, "wrappedPathMakeRelative(): s5 converted %s -> %s", path.c_str(), convPath.c_str());
-
-			opened = true;
-
-			break;
-		}
-	}
-
-	if (!opened && recursive && !directory) {
-		// Hmmm. We couldn't find the path as is.
-		// Let's try to translate file path into 8.3 format
-		Common::String addedexts;
-
-		convPath.clear();
-		const char *ptr = initialPath.c_str();
-		Common::String component;
-
-		while (*ptr) {
-			if (*ptr == g_director->_dirSeparator) {
-				if (component.equals(".")) {
-					convPath += component;
-				} else {
-					convPath += convertMacFilename(component.c_str());
-				}
-
-				component.clear();
-				convPath += g_director->_dirSeparator;
-			} else {
-				component += *ptr;
-			}
-
-			ptr++;
-		}
-
-		if (g_director->getPlatform() == Common::kPlatformWindows) {
-			if (hasExtension(component)) {
-				Common::String nameWithoutExt = component.substr(0, component.size() - 4);
-				Common::String ext = component.substr(component.size() - 4);
-				Common::String newpath = convPath + convertMacFilename(nameWithoutExt.c_str()) + ext;
-
-				debug(9, "wrappedPathMakeRelative(): s6 %s -> try %s", initialPath.c_str(), newpath.c_str());
-				Common::String res = wrappedPathMakeRelative(newpath, false, false);
-
-				if (testPath(res))
-					return res;
-
-				debug(9, "wrappedPathMakeRelative(): s6 -- not found %s", res.c_str());
-			}
-		}
-
-		if (addexts)
-			addedexts = testExtensions(component, initialPath, convPath);
-
-		if (!addedexts.empty()) {
-			return addedexts;
-		}
-
-		return initialPath;	// Anyway nothing good is happening
-	}
-
-	if (opened)
-		return convPath;
-	else
-		return initialPath;
+Common::Path wrappedPathMakeRelative(Common::Path path, bool recursive, bool addexts, bool directory) {
+	return path;
 }
 
 bool hasExtension(Common::String filename) {
@@ -644,39 +513,8 @@ bool hasExtension(Common::String filename) {
 					&& Common::isAlpha(filename[len - 1]);
 }
 
-Common::String testExtensions(Common::String component, Common::String initialPath, Common::String convPath) {
-	const char *extsD3[] = { ".MMM", nullptr };
-	const char *extsD4[] = { ".DIR", ".DXR", nullptr };
-
-	const char **exts = (g_director->getVersion() >= 400) ? extsD4 : extsD3;
-	for (int i = 0; exts[i]; ++i) {
-		Common::String newpath = convPath + component.c_str() + exts[i];
-
-		debug(9, "testExtensions(): sT %s -> try %s, comp: %s", initialPath.c_str(), newpath.c_str(), component.c_str());
-		Common::String res = wrappedPathMakeRelative(newpath, false, false);
-
-		if (testPath(res))
-			return res;
-	}
-	for (int i = 0; exts[i]; ++i) {
-		Common::String newpath = convPath + convertMacFilename(component.c_str()) + exts[i];
-
-		debug(9, "testExtensions(): sT %s -> try %s, comp: %s", initialPath.c_str(), newpath.c_str(), component.c_str());
-		Common::String res = wrappedPathMakeRelative(newpath, false, false);
-
-		if (testPath(res))
-			return res;
-	}
-
-	return Common::String();
-}
-
-Common::String getFileName(Common::String path) {
-	while (path.contains(g_director->_dirSeparator)) {
-		int pos = path.find(g_director->_dirSeparator);
-		path = Common::String(&path.c_str()[pos + 1]);
-	}
-	return path;
+Common::Path getFileName(Common::Path path) {
+	return path.getLastComponent();
 }
 
 //////////////////

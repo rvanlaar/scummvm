@@ -68,7 +68,7 @@ public:
 	struct IgnoreCaseAndMac_Hash {
 		uint operator()(const Path& x) const;
 	};
-
+	
 	/** Construct a new empty path. */
 	Path() {}
 

@@ -26,6 +26,7 @@
 #include "common/hashmap.h"
 #include "common/hash-ptr.h"
 #include "common/hash-str.h"
+#include "common/path.h"
 #include "common/rect.h"
 #include "common/str-array.h"
 
@@ -59,6 +60,7 @@ class Archive;
 class MacArchive;
 class Cast;
 class DirectorSound;
+class DirectorPath;
 class Lingo;
 class Movie;
 class Window;
@@ -94,7 +96,7 @@ enum {
 };
 
 struct MovieReference {
-	Common::String movie;
+	Common::Path movie;
 	Common::String frameS;
 	int frameI;
 
@@ -102,7 +104,7 @@ struct MovieReference {
 };
 
 struct StartMovie {
-	Common::String startMovie;
+	Common::Path startMovie;
 	int16 startFrame;
 
 };
@@ -176,9 +178,9 @@ public:
 	void setCursorWindow(Window *window) { _cursorWindow = window; }
 	Movie *getCurrentMovie() const;
 	void setCurrentMovie(Movie *movie);
-	Common::String getCurrentPath() const;
-	Common::String getCurrentAbsolutePath();
-	Common::String getStartupPath() const;
+	Common::Path getCurrentPath() const;
+	Common::Path getCurrentAbsolutePath();
+	Common::Path getStartupPath() const;
 
 	// graphics.cpp
 	bool hasFeature(EngineFeature f) const override;
@@ -239,11 +241,11 @@ public:
 	char _dirSeparator;
 	bool _fixStageSize;
 	Common::Rect _fixStageRect;
-	Common::List<Common::String> _extraSearchPath;
+	Common::List<Common::Path> _extraSearchPath;
 
-	Common::HashMap<Common::String, Archive *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _allOpenResFiles;
+	Common::HashMap<Common::Path, Archive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo> _allOpenResFiles;
 	// Opened Resource Files that were opened by OpenResFile
-	Common::HashMap<Common::String, MacArchive *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _openResFiles;
+	Common::HashMap<Common::Path, MacArchive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo> _openResFiles;
 
 	Common::Array<Graphics::WinCursorGroup *> _winCursor;
 

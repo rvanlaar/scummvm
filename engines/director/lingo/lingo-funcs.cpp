@@ -200,7 +200,7 @@ void Lingo::func_goto(Datum &frame, Datum &movie) {
 	g_lingo->_freezeState = true;
 
 	if (movie.type != VOID) {
-		Common::String movieFilenameRaw = movie.asString();
+		Common::Path movieFilenameRaw = movie.asString();
 
 		if (!stage->setNextMovie(movieFilenameRaw))
 			return;
@@ -216,13 +216,13 @@ void Lingo::func_goto(Datum &frame, Datum &movie) {
 		stage->_nextMovie.frameI = -1;
 
 		if (frame.type == STRING) {
-			debugC(3, kDebugLingoExec, "Lingo::func_goto(): going to movie \"%s\", frame \"%s\"", movieFilenameRaw.c_str(), frame.u.s->c_str());
+			debugC(3, kDebugLingoExec, "Lingo::func_goto(): going to movie \"%s\", frame \"%s\"", movieFilenameRaw.toString().c_str(), frame.u.s->c_str());
 			stage->_nextMovie.frameS = *frame.u.s;
 		} else if (frame.type != VOID) {
-			debugC(3, kDebugLingoExec, "Lingo::func_goto(): going to movie \"%s\", frame %d", movieFilenameRaw.c_str(), frame.asInt());
+			debugC(3, kDebugLingoExec, "Lingo::func_goto(): going to movie \"%s\", frame %d", movieFilenameRaw.toString().c_str(), frame.asInt());
 			stage->_nextMovie.frameI = frame.asInt();
 		} else {
-			debugC(3, kDebugLingoExec, "Lingo::func_goto(): going to start of movie \"%s\"", movieFilenameRaw.c_str());
+			debugC(3, kDebugLingoExec, "Lingo::func_goto(): going to start of movie \"%s\"", movieFilenameRaw.toString().c_str());
 		}
 
 		// Set cursor to watch.
@@ -298,7 +298,7 @@ void Lingo::func_play(Datum &frame, Datum &movie) {
 			m.type = VOID;
 		} else {
 			m.type = STRING;
-			m.u.s = new Common::String(ref.movie);
+			m.u.s = new Common::String(ref.movie.toString());
 		}
 
 		f.type = INT;

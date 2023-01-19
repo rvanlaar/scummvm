@@ -109,7 +109,7 @@ void Window::testFontScaling() {
 		x += tile->getSurface()->w + 10;
 	}
 
-	Common::String path = pathMakeRelative("blend2.pic");
+	Common::Path path = pathMakeRelative("blend2.pic");
 	Common::File in;
 	in.open(path);
 
@@ -122,7 +122,7 @@ void Window::testFontScaling() {
 		surface.blitFrom(res, Common::Point(400, 280));
 		in.close();
 	} else {
-		warning("b_importFileInto(): Cannot open file %s", path.c_str());
+		warning("b_importFileInto(): Cannot open file %s", path.toString().c_str());
 	}
 
 	g_system->copyRectToScreen(surface.getPixels(), surface.pitch, 0, 0, w, h); // testing fonts
@@ -165,7 +165,7 @@ void Window::testFonts() {
 //////////////////////
 // Movie iteration
 //////////////////////
-Common::HashMap<Common::String, Movie *> *Window::scanMovies(const Common::String &folder) {
+Common::HashMap<Common::Path, Movie *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo> *Window::scanMovies(const Common::String &folder) {
 	Common::FSNode directory(folder);
 	Common::FSList movies;
 	const char *sharedMMMname;
@@ -176,7 +176,7 @@ Common::HashMap<Common::String, Movie *> *Window::scanMovies(const Common::Strin
 		sharedMMMname = "Shared Cast";
 
 
-	Common::HashMap<Common::String, Movie *> *nameMap = new Common::HashMap<Common::String, Movie *>();
+	Common::HashMap<Common::Path, Movie *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo> *nameMap = new Common::HashMap<Common::Path, Movie *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo>();
 	if (!directory.getChildren(movies, Common::FSNode::kListFilesOnly))
 		return nameMap;
 
@@ -197,7 +197,7 @@ Common::HashMap<Common::String, Movie *> *Window::scanMovies(const Common::Strin
 			m->setArchive(arc);
 			nameMap->setVal(m->getMacName(), m);
 
-			debugC(2, kDebugLoading, "Movie name: \"%s\"", m->getMacName().c_str());
+			debugC(2, kDebugLoading, "Movie name: \"%s\"", m->getMacName().toString().c_str());
 		}
 	}
 
@@ -229,7 +229,7 @@ MovieReference Window::getNextMovieFromQueue() {
 	res.movie = _movieQueue.front();
 
 	debug(0, "=======================================");
-	debug(0, "=========> Next movie is %s", res.movie.c_str());
+	debug(0, "=========> Next movie is %s", res.movie.toString().c_str());
 	debug(0, "=======================================");
 
 	_movieQueue.remove_at(0);

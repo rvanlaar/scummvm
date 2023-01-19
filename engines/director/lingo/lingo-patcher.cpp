@@ -224,7 +224,7 @@ Common::U32String LingoCompiler::patchLingoCode(const Common::U32String &line, L
 		return line;
 
 	const ScriptPatch *patch = scriptPatches;
-	Common::String movie = g_director->getCurrentPath() + archive->cast->getMacName();
+	Common::Path movie = g_director->getCurrentPath().appendComponent(archive->cast->getMacName());
 
 	// So far, we have not many patches, so do linear lookup
 	while (patch->gameId) {
@@ -236,8 +236,8 @@ Common::U32String LingoCompiler::patchLingoCode(const Common::U32String &line, L
 		}
 
 		// Now expensive ones
-		U32String moviename = punycode_decode(patch->movie);
-		if (movie.compareToIgnoreCase(moviename) || strcmp(patch->gameId, g_director->getGameId())
+		Common::Path moviename = Common::String(punycode_decode(patch->movie));
+		if (movie == moviename || strcmp(patch->gameId, g_director->getGameId())
 				|| (patch->extra && strcmp(patch->extra, g_director->getExtra()))) {
 			patch++;
 			continue;

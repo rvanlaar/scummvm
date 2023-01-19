@@ -160,7 +160,7 @@ public:
 	bool isModified() override;
 	Graphics::MacWidget *createWidget(Common::Rect &bbox, Channel *channel, SpriteType spriteType) override;
 
-	bool loadVideo(Common::String path);
+	bool loadVideo(Common::Path path);
 	void startVideo(Channel *channel);
 	void stopVideo();
 	void rewindVideo();
@@ -179,7 +179,7 @@ public:
 
 	Common::String formatInfo() override;
 
-	Common::String _filename;
+	Common::Path _filename;
 
 	uint32 _vflags;
 	bool _looping;

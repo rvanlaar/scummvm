@@ -699,7 +699,7 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	case kTheMovie:
 	case kTheMovieName:
 		d.type = STRING;
-		d.u.s = new Common::String(movie->getMacName());
+		d.u.s = new Common::String(movie->getMacName().toString());
 		break;
 	case kTheMovieFileFreeSize:
 		d = 0;	// Let's pretend the movie is compactified
@@ -710,7 +710,7 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 	case kTheMoviePath:
 	case kThePathName:
 		d.type = STRING;
-		d.u.s = new Common::String(_vm->getCurrentAbsolutePath());
+		d.u.s = new Common::String(_vm->getCurrentAbsolutePath().toString(g_director->_dirSeparator));
 		break;
 	case kTheMultiSound:
 		// We always support multiple sound channels!

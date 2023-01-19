@@ -226,7 +226,7 @@ void Cast::setArchive(Archive *archive) {
 	if (archive->hasResource(MKTAG('M', 'C', 'N', 'M'), 0)) {
 		_macName = archive->getName(MKTAG('M', 'C', 'N', 'M'), 0).c_str();
 	} else {
-		_macName = archive->getFileName();
+		_macName = archive->getFileName().toString().c_str();
 	}
 }
 
@@ -483,7 +483,7 @@ void Cast::loadCast() {
 	if (_castArchive->hasResource(MKTAG('F', 'O', 'N', 'D'), -1)) {
 		debug("Cast::loadCast(): Movie has fonts. Loading....");
 
-		_vm->_wm->_fontMan->loadFonts(_castArchive->getPathName());
+		_vm->_wm->_fontMan->loadFonts(_castArchive->getPathName().punycodeEncode().toString());
 	}
 
 	// CastMember Information Array
@@ -768,10 +768,10 @@ void Cast::loadSoundData(int key, SoundCastMember *soundCast) {
 	if (sndData != nullptr) {
 		if (sndData->size() == 0) {
 			// audio file is linked, load from the filesystem
-			Common::String filename = _castsInfo[key]->fileName;
+			Common::Path filename = _castsInfo[key]->fileName;
 
 			if (!_castsInfo[key]->directory.empty())
-				filename = _castsInfo[key]->directory + g_director->_dirSeparator + _castsInfo[key]->fileName;
+				filename = Common::Path(_castsInfo[key]->directory).appendComponent(_castsInfo[key]->fileName);
 
 			AudioFileDecoder *audio = new AudioFileDecoder(filename);
 			soundCast->_audio = audio;
@@ -966,7 +966,7 @@ void Cast::loadExternalSound(Common::SeekableReadStreamEndian &stream) {
 	str.trim();
 	debugC(1, kDebugLoading, "****** Loading External Sound File %s", str.c_str());
 
-	Common::String resPath = g_director->getCurrentPath() + str;
+	Common::Path resPath = g_director->getCurrentPath().appendComponent(str);
 
 	if (!g_director->_allOpenResFiles.contains(resPath)) {
 		MacArchive *resFile = new MacArchive();

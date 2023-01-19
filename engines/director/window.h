@@ -131,11 +131,11 @@ public:
 	DirectorEngine *getVM() const { return _vm; }
 	Archive *getMainArchive() const { return _mainArchive; }
 	Movie *getCurrentMovie() const { return _currentMovie; }
-	Common::String getCurrentPath() const { return _currentPath; }
+	Common::Path getCurrentPath() const { return _currentPath; }
 	DirectorSound *getSoundManager() const { return _soundManager; }
 
 	void setVisible(bool visible, bool silent = false) override;
-	bool setNextMovie(Common::String &movieFilenameRaw);
+	bool setNextMovie(Common::Path &movieFilenameRaw);
 
 	void setWindowType(int type) { _windowType = type; updateBorderType(); }
 	int getWindowType() const { return _windowType; }
@@ -149,7 +149,7 @@ public:
 	bool loadNextMovie();
 	void loadNewSharedCast(Cast *previousSharedCast);
 
-	Common::String getSharedCastPath();
+	Common::Path getSharedCastPath();
 
 	LingoState *getLingoState() { return _lingoState; };
 	uint32 frozenLingoStateCount() { return _frozenLingoStates.size(); };
@@ -160,7 +160,7 @@ public:
 	bool processEvent(Common::Event &event) override;
 
 	// tests.cpp
-	Common::HashMap<Common::String, Movie *> *scanMovies(const Common::String &folder);
+	Common::HashMap<Common::Path, Movie *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo> *scanMovies(const Common::String &folder);
 	void testFontScaling();
 	void testFonts();
 	void enqueueAllMovies();
@@ -169,17 +169,17 @@ public:
 
 	// resource.cpp
 	Common::Error loadInitialMovie();
-	void probeProjector(const Common::String &movie);
+	void probeProjector(const Common::Path &movie);
 	void probeMacBinary(MacArchive *archive);
 	void loadINIStream();
-	Archive *openArchive(const Common::String movie);
-	Archive *loadEXE(const Common::String movie);
+	Archive *openArchive(const Common::Path movie);
+	Archive *loadEXE(const Common::Path movie);
 	Archive *loadEXEv3(Common::SeekableReadStream *stream);
 	Archive *loadEXEv4(Common::SeekableReadStream *stream);
 	Archive *loadEXEv5(Common::SeekableReadStream *stream);
 	Archive *loadEXEv7(Common::SeekableReadStream *stream);
 	Archive *loadEXERIFX(Common::SeekableReadStream *stream, uint32 offset);
-	Archive *loadMac(const Common::String movie);
+	Archive *loadMac(const Common::Path movie);
 	void loadStartMovieXLibs();
 
 	// lingo/lingo-object.cpp
@@ -209,7 +209,7 @@ private:
 	bool _isStage;
 	Archive *_mainArchive;
 	Movie *_currentMovie;
-	Common::String _currentPath;
+	Common::Path _currentPath;
 	Common::StringArray _movieQueue;
 	int16 _startFrame;
 

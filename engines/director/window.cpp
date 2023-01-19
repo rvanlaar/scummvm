@@ -231,7 +231,7 @@ Common::Point Window::getMousePos() {
 void Window::setVisible(bool visible, bool silent) {
 	// setting visible triggers movie load
 	if (!_currentMovie && !silent) {
-		Common::String movieName = getName();
+		Common::Path movieName = getName();
 		setNextMovie(movieName);
 	}
 
@@ -241,20 +241,21 @@ void Window::setVisible(bool visible, bool silent) {
 		_wm->setActiveWindow(_id);
 }
 
-bool Window::setNextMovie(Common::String &movieFilenameRaw) {
-	Common::String movieFilename = pathMakeRelative(movieFilenameRaw);
+bool Window::setNextMovie(Common::Path &movieFilenameRaw) {
+	Common::Path movieFilename = pathMakeRelative(movieFilenameRaw);
 
 	bool fileExists = false;
 	Common::File file;
-	if (file.open(Common::Path(movieFilename, _vm->_dirSeparator))) {
+	if (file.open(movieFilename)) {
 		fileExists = true;
 		file.close();
-	}
+	}	
+	// TODO: Roland, convert path, why is that in here?
 
-	debug(1, "Window::setNextMovie: '%s' -> '%s' -> '%s'", movieFilenameRaw.c_str(), convertPath(movieFilenameRaw).c_str(), movieFilename.c_str());
+	debug(1, "Window::setNextMovie: '%s' -> '%s' -> '%s'", movieFilenameRaw.toString().c_str(), movieFilenameRaw.toString().c_str(), movieFilename.toString().c_str());
 
 	if (!fileExists) {
-		warning("Movie %s does not exist", movieFilename.c_str());
+		warning("Movie %s does not exist", movieFilename.toString().c_str());
 		return false;
 	}
 
@@ -273,14 +274,14 @@ void Window::updateBorderType() {
 }
 
 void Window::loadNewSharedCast(Cast *previousSharedCast) {
-	Common::String previousSharedCastPath;
-	Common::String newSharedCastPath = getSharedCastPath();
+	Common::Path previousSharedCastPath;
+	Common::Path newSharedCastPath = getSharedCastPath();
 	if (previousSharedCast && previousSharedCast->getArchive()) {
 		previousSharedCastPath = previousSharedCast->getArchive()->getPathName();
 	}
 
 	// Check if previous and new sharedCasts are the same
-	if (!previousSharedCastPath.empty() && previousSharedCastPath.equalsIgnoreCase(newSharedCastPath)) {
+	if (!previousSharedCastPath.empty() && previousSharedCastPath == newSharedCastPath) {
 		// Clear those previous widget pointers
 		previousSharedCast->releaseCastMemberWidget();
 		_currentMovie->_sharedCast = previousSharedCast;
@@ -313,7 +314,7 @@ bool Window::loadNextMovie() {
 	delete _currentMovie;
 	_currentMovie = nullptr;
 
-	Archive *mov = openArchive(_currentPath + Common::lastPathComponent(_nextMovie.movie, g_director->_dirSeparator));
+	Archive *mov = openArchive(_currentPath.appendComponent(_nextMovie.movie.getLastComponent().toString()));
 
 	if (!mov)
 		return false;
@@ -322,7 +323,7 @@ bool Window::loadNextMovie() {
 	_currentMovie->setArchive(mov);
 
 	debug(0, "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	debug(0, "@@@@   Switching to movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName()).c_str(), _currentPath.c_str());
+	debug(0, "@@@@   Switching to movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName().toString()).c_str(), _currentPath.toString().c_str());
 	debug(0, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 	g_lingo->resetLingo();
@@ -334,11 +335,11 @@ bool Window::step() {
 	// finish last movie
 	if (_currentMovie && _currentMovie->getScore()->_playState == kPlayStopped) {
 		debugC(3, kDebugEvents, "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		debugC(3, kDebugEvents, "@@@@   Finishing movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName()).c_str(), _currentPath.c_str());
+		debugC(3, kDebugEvents, "@@@@   Finishing movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName().toString()).c_str(), _currentPath.toString().c_str());
 		debugC(3, kDebugEvents, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 		_currentMovie->getScore()->stopPlay();
-		debugC(1, kDebugEvents, "Finished playback of movie '%s'", utf8ToPrintable(_currentMovie->getMacName()).c_str());
+		debugC(1, kDebugEvents, "Finished playback of movie '%s'", utf8ToPrintable(_currentMovie->getMacName().toString()).c_str());
 
 		if (_vm->getGameGID() == GID_TESTALL) {
 			_nextMovie = getNextMovieFromQueue();
@@ -349,7 +350,7 @@ bool Window::step() {
 	if (!_nextMovie.movie.empty()) {
 		if (!loadNextMovie())
 			return (_vm->getGameGID() == GID_TESTALL);
-		_nextMovie.movie.clear();
+		_nextMovie.movie = Common::Path();
 	}
 
 	// play current movie
@@ -358,7 +359,7 @@ bool Window::step() {
 		case kPlayNotStarted:
 			{
 				debug(0, "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				debug(0, "@@@@   Loading movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName()).c_str(), _currentPath.c_str());
+				debug(0, "@@@@   Loading movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName().toString()).c_str(), _currentPath.toString().c_str());
 				debug(0, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 				bool goodMovie = _currentMovie->loadArchive();
@@ -376,7 +377,7 @@ bool Window::step() {
 
 
 				if (!debugChannelSet(-1, kDebugCompileOnly) && goodMovie) {
-					debugC(1, kDebugEvents, "Starting playback of movie '%s'", _currentMovie->getMacName().c_str());
+					debugC(1, kDebugEvents, "Starting playback of movie '%s'", _currentMovie->getMacName().toString().c_str());
 					_currentMovie->getScore()->startPlay();
 					if (_startFrame != -1) {
 						_currentMovie->getScore()->setCurrentFrame(_startFrame);
@@ -390,7 +391,7 @@ bool Window::step() {
 			// fall through
 		case kPlayStarted:
 			debugC(3, kDebugEvents, "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-			debugC(3, kDebugEvents, "@@@@   Stepping movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName()).c_str(), _currentPath.c_str());
+			debugC(3, kDebugEvents, "@@@@   Stepping movie '%s' in '%s'", utf8ToPrintable(_currentMovie->getMacName().toString()).c_str(), _currentPath.toString().c_str());
 			debugC(3, kDebugEvents, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 			_currentMovie->getScore()->step();
 			return true;
@@ -402,7 +403,8 @@ bool Window::step() {
 	return false;
 }
 
-Common::String Window::getSharedCastPath() {
+Common::Path Window::getSharedCastPath() {
+	Common::Path sharedCastPath;
 	Common::Array<Common::String> namesToTry;
 	if (_vm->getVersion() < 400) {
 		if (g_director->getPlatform() == Common::kPlatformWindows) {
@@ -421,13 +423,14 @@ Common::String Window::getSharedCastPath() {
 
 	for (uint i = 0; i < namesToTry.size(); i++) {
 		Common::File f;
-		if (f.open(Common::Path(_currentPath + namesToTry[i], _vm->_dirSeparator))) {
+		sharedCastPath = _currentPath.appendComponent(namesToTry[i]);
+		if (f.open(sharedCastPath)) {
 			f.close();
-			return _currentPath + namesToTry[i];
+			return sharedCastPath;
 		}
 	}
 
-	return Common::String();
+	return Common::Path();
 }
 
 void Window::freezeLingoState() {

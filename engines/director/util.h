@@ -35,19 +35,19 @@ Common::String convertPath(Common::String &path);
 
 Common::String unixToMacPath(const Common::String &path);
 
-Common::String getPath(Common::String path, Common::String cwd);
+Common::Path getPath(Common::Path path, Common::Path cwd);
 
-bool testPath(Common::String &path, bool directory = false);
+bool testPath(Common::Path &path, bool directory = false);
 
-Common::String pathMakeRelative(Common::String path, bool recursive = true, bool addexts = true, bool directory = false);
+Common::Path pathMakeRelative(Common::Path path, bool recursive = true, bool addexts = true, bool directory = false);
 
-Common::String wrappedPathMakeRelative(Common::String path, bool recursive = true, bool addexts = true, bool directory = false);
+Common::Path wrappedPathMakeRelative(Common::Path path, bool recursive = true, bool addexts = true, bool directory = false);
 
 bool hasExtension(Common::String filename);
 
 Common::String testExtensions(Common::String component, Common::String initialPath, Common::String convPath);
 
-Common::String getFileName(Common::String path);
+Common::Path getFileName(Common::Path path);
 
 Common::String stripMacPath(const char *name);
 

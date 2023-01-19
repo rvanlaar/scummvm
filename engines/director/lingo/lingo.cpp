@@ -323,7 +323,7 @@ Symbol Lingo::getHandler(const Common::String &name) {
 
 void LingoArchive::addCode(const Common::U32String &code, ScriptType type, uint16 id, const char *scriptName) {
 	debugC(1, kDebugCompile, "Add code for type %s(%d) with id %d in '%s%s'\n"
-			"***********\n%s\n\n***********", scriptType2str(type), type, id, utf8ToPrintable(g_director->getCurrentPath()).c_str(), utf8ToPrintable(cast->getMacName()).c_str(), code.encode().c_str());
+			"***********\n%s\n\n***********", scriptType2str(type), type, id, utf8ToPrintable(g_director->getCurrentPath().toString()).c_str(), utf8ToPrintable(cast->getMacName()).c_str(), code.encode().c_str());
 
 	if (getScriptContext(type, id)) {
 		// Replace the pre-existing context but warn about it.
@@ -1300,19 +1300,21 @@ void Lingo::runTests() {
 	Common::File inFile;
 	Common::ArchiveMemberList fsList;
 	SearchMan.listMatchingMembers(fsList, "*.lingo");
-	Common::StringArray fileList;
+	Common::Array<Common::Path> fileList;
+
 
 	LingoArchive *mainArchive = g_director->getCurrentMovie()->getMainLingoArch();
 
-	Common::String startMovie = _vm->getStartMovie().startMovie;
-	if (startMovie.size() > 0) {
+	Common::Path startMovie = _vm->getStartMovie().startMovie;
+	if (!startMovie.empty()) {
 		fileList.push_back(startMovie);
 	} else {
 		for (Common::ArchiveMemberList::iterator it = fsList.begin(); it != fsList.end(); ++it)
-			fileList.push_back((*it)->getName());
+			fileList.push_back(Common::Path((*it)->getName()));
 	}
 
-	Common::sort(fileList.begin(), fileList.end());
+	// TODO: sort path
+	//Common::sort(fileList.begin(), fileList.end());
 
 	int counter = 1;
 
@@ -1325,7 +1327,7 @@ void Lingo::runTests() {
 
 			stream->read(script, size);
 
-			debug(">> Compiling file %s of size %d, id: %d", fileList[i].c_str(), size, counter);
+			debug(">> Compiling file %s of size %d, id: %d", fileList[i].toString().c_str(), size, counter);
 
 			mainArchive->addCode(Common::U32String(script, Common::kMacRoman), kTestScript, counter);
 

@@ -43,13 +43,13 @@ Archive::~Archive() {
 	close();
 }
 
-Common::String Archive::getFileName() const { return Director::getFileName(_pathName); }
+Common::Path Archive::getFileName() const { return Director::getFileName(_pathName); }
 
-bool Archive::openFile(const Common::String &fileName) {
+bool Archive::openFile(const Common::Path &fileName) {
 	Common::File *file = new Common::File();
 
-	if (!file->open(Common::Path(fileName, g_director->_dirSeparator))) {
-		warning("Archive::openFile(): Error opening file %s", fileName.c_str());
+	if (!file->open(fileName)) {
+		warning("Archive::openFile(): Error opening file %s", fileName.toString().c_str());
 		delete file;
 		return false;
 	}
@@ -57,7 +57,7 @@ bool Archive::openFile(const Common::String &fileName) {
 	_pathName = fileName;
 
 	if (!openStream(file)) {
-		warning("Archive::openFile(): Error loading stream from file %s", fileName.c_str());
+		warning("Archive::openFile(): Error loading stream from file %s", fileName.toString().c_str());
 		close();
 		return false;
 	}
@@ -230,7 +230,7 @@ void Archive::dumpChunk(Resource &res, Common::DumpFile &out) {
 		dataSize = resStream->size();
 	}
 
-	Common::String prepend = _pathName.size() ? _pathName : "stream";
+	Common::String prepend = _pathName.empty() ? _pathName.toString() : "stream";
 	Common::String filename = Common::String::format("./dumps/%s-%s-%d", encodePathForDump(prepend).c_str(), tag2str(res.tag), res.index);
 	resStream->read(data, len);
 
@@ -261,23 +261,26 @@ void MacArchive::close() {
 	_resFork = nullptr;
 }
 
-bool MacArchive::openFile(const Common::String &fileName) {
+bool MacArchive::openFile(const Common::Path &fileName) {
 	close();
 
 	_resFork = new Common::MacResManager();
 
-	Common::String fName = fileName;
+	Common::Path fName = fileName;
 
-	if (!_resFork->open(Common::Path(fName, g_director->_dirSeparator)) || !_resFork->hasResFork()) {
+	if (!_resFork->open(fName) || !_resFork->hasResFork()) {
 		close();
 		return false;
 	}
-
-	_pathName = _resFork->getBaseFileName().toString(g_director->_dirSeparator);
-	if (_pathName.hasSuffix(".bin")) {
+	
+	// ToDo: remove need to do string manip
+	_pathName = _resFork->getBaseFileName();
+	Common::String s = _pathName.toString(g_director->_dirSeparator);
+	if (s.hasSuffix(".bin")) {
 		for (int i = 0; i < 4; i++)
-			_pathName.deleteLastChar();
+			s.deleteLastChar();
 	}
+	_pathName = Common::Path(s, g_director->_dirSeparator);
 
 	readTags();
 

@@ -141,7 +141,7 @@ DirectorEngine::~DirectorEngine() {
 	delete _wm;
 	delete _surface;
 
-	for (Common::HashMap<Common::String, Archive *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo>::iterator it = _allOpenResFiles.begin(); it != _allOpenResFiles.end(); ++it) {
+	for (Common::HashMap<Common::Path, Archive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo>::iterator it = _allOpenResFiles.begin(); it != _allOpenResFiles.end(); ++it) {
 		delete it->_value;
 	}
 
@@ -153,12 +153,12 @@ DirectorEngine::~DirectorEngine() {
 
 Archive *DirectorEngine::getMainArchive() const { return _currentWindow->getMainArchive(); }
 Movie *DirectorEngine::getCurrentMovie() const { return _currentWindow->getCurrentMovie(); }
-Common::String DirectorEngine::getCurrentPath() const { return _currentWindow->getCurrentPath(); }
-Common::String DirectorEngine::getCurrentAbsolutePath() {
-	Common::String currentPath = getCurrentPath();
-	Common::String result;
-	result += (getPlatform() == Common::kPlatformWindows) ? "C:\\" : "";
-	result += convertPath(currentPath);
+Common::Path DirectorEngine::getCurrentPath() const { return _currentWindow->getCurrentPath(); }
+Common::Path DirectorEngine::getCurrentAbsolutePath() {
+	Common::Path currentPath = getCurrentPath();
+	Common::Path result;
+	result = (getPlatform() == Common::kPlatformWindows) ? Common::Path("C:\\") : Common::Path("");
+	result.appendInPlace(currentPath);
 	return result;
 }
 
@@ -290,8 +290,8 @@ Common::CodePage DirectorEngine::getPlatformEncoding() {
 
 Common::String DirectorEngine::getEXEName() const {
 	StartMovie startMovie = getStartMovie();
-	if (startMovie.startMovie.size() > 0)
-		return startMovie.startMovie;
+	if (!startMovie.startMovie.empty())
+		return startMovie.startMovie.toString(g_director->_dirSeparator);
 
 	return Common::punycode_decodefilename(Common::lastPathComponent(_gameDescription->desc.filesDescriptions[0].fileName, '/'));
 }
@@ -334,9 +334,9 @@ void DirectorEngine::parseOptions() {
 					_options.startMovie.startFrame = atoi(tail.c_str());
 			}
 
-			_options.startMovie.startMovie = Common::Path(_options.startMovie.startMovie).punycodeDecode().toString(_dirSeparator);
+			_options.startMovie.startMovie = Common::Path(_options.startMovie.startMovie).punycodeDecode();
 
-			debug(2, "parseOptions(): Movie is: %s, frame is: %d", _options.startMovie.startMovie.c_str(), _options.startMovie.startFrame);
+			debug(2, "parseOptions(): Movie is: %s, frame is: %d", _options.startMovie.startMovie.toString().c_str(), _options.startMovie.startFrame);
 		} else if (key == "startup") {
 			_options.startupPath = value;
 
@@ -352,7 +352,7 @@ StartMovie DirectorEngine::getStartMovie() const {
 	return _options.startMovie;
 }
 
-Common::String DirectorEngine::getStartupPath() const {
+Common::Path DirectorEngine::getStartupPath() const {
 	return _options.startupPath;
 }
 

@@ -24,6 +24,7 @@
 
 #include "common/array.h"
 #include "common/str.h"
+#include "common/path.h"
 #include "gui/debugger.h"
 #include "director/director.h"
 #include "director/lingo/lingo.h"
@@ -47,7 +48,7 @@ struct Breakpoint {
 	uint16 scriptId = 0;
 	Common::String funcName;
 	uint funcOffset = 0;
-	Common::String moviePath;
+	Common::Path moviePath;
 	uint frameOffset = 0;
 	Common::String varName;
 	int entity = 0;
@@ -67,10 +68,10 @@ struct Breakpoint {
 				result += Common::String::format(" [%5d]", funcOffset);
 			break;
 		case kBreakpointMovie:
-			result += "Movie " + moviePath;
+			result += "Movie " + moviePath.toString();
 			break;
 		case kBreakpointMovieFrame:
-			result += Common::String::format("Movie %s:%d", moviePath.c_str(), frameOffset);
+			result += Common::String::format("Movie %s:%d", moviePath.toString().c_str(), frameOffset);
 			break;
 		case kBreakpointVariable:
 			result += "Variable "+ varName + ":";
@@ -170,7 +171,7 @@ private:
 	bool _bpNextMovieMatch;
 	Common::String _bpMatchFuncName;
 	uint _bpMatchScriptId;
-	Common::String _bpMatchMoviePath;
+	Common::Path _bpMatchMoviePath;
 	Common::HashMap<uint, void *> _bpMatchFuncOffsets;
 	Common::HashMap<uint, void *> _bpMatchFrameOffsets;
 	bool _bpCheckVarRead;

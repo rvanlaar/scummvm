@@ -1108,7 +1108,7 @@ void LB::b_closeResFile(int nargs) {
 	// closeResFile closes only resource files that were opened with openResFile.
 
 	if (nargs == 0) { // Close all open resesource files
-		for (Common::HashMap<Common::String, MacArchive *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo>::iterator
+		for (Common::HashMap<Common::Path, MacArchive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo>::iterator
 				it = g_director->_openResFiles.begin(); it != g_director->_openResFiles.end(); ++it) {
 			// also clean up the global resource file hashmap
 			g_director->_allOpenResFiles.erase(it->_key);
@@ -1119,7 +1119,7 @@ void LB::b_closeResFile(int nargs) {
 	}
 
 	Datum d = g_lingo->pop();
-	Common::String resFileName = g_director->getCurrentWindow()->getCurrentPath() + d.asString();
+	Common::Path resFileName = g_director->getCurrentWindow()->getCurrentPath().appendComponent(d.asString());
 
 	if (g_director->_openResFiles.contains(resFileName)) {
 		auto archive = g_director->_openResFiles.getVal(resFileName);
@@ -1137,17 +1137,17 @@ void LB::b_closeXlib(int nargs) {
 	}
 
 	Datum d = g_lingo->pop();
-	Common::String xlibName = getFileName(d.asString());
+	Common::String xlibName = getFileName(d.asString()).toString();
 	g_lingo->closeXLib(xlibName);
 }
 
 void LB::b_getNthFileNameInFolder(int nargs) {
 	int fileNum = g_lingo->pop().asInt() - 1;
-	Common::String path = pathMakeRelative(g_lingo->pop().asString(), true, false, true);
+	Common::Path path = pathMakeRelative(Common::Path(g_lingo->pop().asString()), true, false, true);
 	// for directory, we either return the correct path, which we can access recursively.
 	// or we get a wrong path, which will lead us to a non-exist file node
 
-	Common::StringTokenizer directory_list(path, Common::String(g_director->_dirSeparator));
+	Common::StringTokenizer directory_list(path.toString(), Common::String(g_director->_dirSeparator));
 	Common::FSNode d = Common::FSNode(*g_director->getGameDataDir());
 	while (d.exists() && !directory_list.empty()) {
 		d = d.getChild(directory_list.nextToken());
@@ -1157,7 +1157,7 @@ void LB::b_getNthFileNameInFolder(int nargs) {
 	if (d.exists()) {
 		Common::FSList f;
 		if (!d.getChildren(f, Common::FSNode::kListAll)) {
-			warning("Cannot access directory %s", path.c_str());
+			warning("Cannot access directory %s", path.toString().c_str());
 		} else {
 			if ((uint)fileNum < f.size()) {
 				// here, we sort all the fileNames
@@ -1195,7 +1195,7 @@ void LB::b_openDA(int nargs) {
 
 void LB::b_openResFile(int nargs) {
 	Datum d = g_lingo->pop();
-	Common::String resPath = g_director->getCurrentWindow()->getCurrentPath() + d.asString();
+	Common::Path resPath = g_director->getCurrentWindow()->getCurrentPath().appendComponent(d.asString());
 
 	if (g_director->getPlatform() == Common::kPlatformWindows) {
 		warning("STUB: BUILDBOT: b_openResFile(%s) on Windows", d.asString().c_str());
@@ -1223,7 +1223,7 @@ void LB::b_openXlib(int nargs) {
 	Datum d = g_lingo->pop();
 	if (g_director->getPlatform() == Common::kPlatformMacintosh) {
 		// try opening the file as a resfile
-		Common::String resPath = g_director->getCurrentWindow()->getCurrentPath() + d.asString();
+		Common::Path resPath = g_director->getCurrentWindow()->getCurrentPath().appendComponent(d.asString());
 		if (!g_director->_allOpenResFiles.contains(resPath)) {
 			MacArchive *resFile = new MacArchive();
 
@@ -1258,7 +1258,7 @@ void LB::b_openXlib(int nargs) {
 		}
 	}
 
-	xlibName = getFileName(d.asString());
+	xlibName = getFileName(d.asString()).toString();
 	g_lingo->openXLib(xlibName, kXObj);
 }
 
@@ -1279,7 +1279,7 @@ void LB::b_showResFile(int nargs) {
 		g_lingo->pop();
 	Common::String out;
 	for (auto it = g_director->_allOpenResFiles.begin(); it != g_director->_allOpenResFiles.end(); it++)
-		out += it->_key + "\n";
+		out += it->_key.toString() + "\n";
 	g_debugger->debugLogFile(out, false);
 }
 
@@ -1968,12 +1968,12 @@ void LB::b_importFileInto(int nargs) {
 		return;
 	}
 
-	Common::String path = pathMakeRelative(file.asString());
+	Common::Path path = pathMakeRelative(file.asString());
 	Common::File in;
 	in.open(path);
 
 	if (!in.isOpen()) {
-		warning("b_importFileInto(): Cannot open file %s", path.c_str());
+		warning("b_importFileInto(): Cannot open file %s", path.toString().c_str());
 		return;
 	}
 
@@ -2973,7 +2973,7 @@ void LB::b_sound(int nargs) {
 		TYPECHECK(firstArg, INT);
 		TYPECHECK(secondArg, STRING);
 
-		soundManager->playFile(pathMakeRelative(*secondArg.u.s), firstArg.u.i);
+		soundManager->playFile(Common::Path(*secondArg.u.s), firstArg.u.i);
 	} else {
 		warning("b_sound: unknown verb %s", verb.u.s->c_str());
 	}

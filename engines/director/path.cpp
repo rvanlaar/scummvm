@@ -38,7 +38,6 @@ Common::String DirectorPath::toDirector() const {
 	return toString(separator);
 }
 
-
 PathLib::PathLib(Common::Platform platform, uint16 version) {
 	if (platform == Common::kPlatformWindows && version >= 400)
 		_dirSeperator = '\\';

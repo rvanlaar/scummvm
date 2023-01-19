@@ -73,10 +73,9 @@ SoundChannel *DirectorSound::getChannel(uint8 soundChannel) {
 	return &_channels[soundChannel - 1];
 }
 
-void DirectorSound::playFile(Common::String filename, uint8 soundChannel) {
+void DirectorSound::playFile(Common::Path filename, uint8 soundChannel) {
 	if (debugChannelSet(-1, kDebugFast))
 		return;
-
 	AudioFileDecoder af(filename);
 	Audio::AudioStream *sound = af.getAudioStream(false, false, DisposeAfterUse::YES);
 
@@ -329,7 +328,7 @@ void DirectorSound::loadSampleSounds(uint type) {
 	uint id = 0xFF;
 	Archive *archive = nullptr;
 
-	for (Common::HashMap<Common::String, Archive *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo>::iterator it = g_director->_allOpenResFiles.begin(); it != g_director->_allOpenResFiles.end(); ++it) {
+	for (Common::HashMap<Common::Path, Archive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo>::iterator it = g_director->_allOpenResFiles.begin(); it != g_director->_allOpenResFiles.end(); ++it) {
 		Common::Array<uint16> idList = it->_value->getResourceIDList(tag);
 		for (uint j = 0; j < idList.size(); j++) {
 			if ((idList[j] & 0xFF) == type) {
@@ -535,7 +534,7 @@ void DirectorSound::playFPlaySound() {
 	Archive *archive = nullptr;
 
 	// iterate opened ResFiles
-	for (Common::HashMap<Common::String, Archive *, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo>::iterator it = g_director->_allOpenResFiles.begin(); it != g_director->_allOpenResFiles.end(); ++it) {
+	for (Common::HashMap<Common::Path, Archive *, Common::Path::IgnoreCaseAndMac_Hash, Common::Path::IgnoreCaseAndMac_EqualsTo>::iterator it = g_director->_allOpenResFiles.begin(); it != g_director->_allOpenResFiles.end(); ++it) {
 		id = it->_value->findResourceID(tag, sndName, true);
 		if (id != 0xFFFF) {
 			archive = it->_value;
@@ -793,7 +792,7 @@ bool SNDDecoder::hasLoopBounds() {
 	return _loopStart != 0 && _loopEnd != 0;
 }
 
-AudioFileDecoder::AudioFileDecoder(Common::String &path)
+AudioFileDecoder::AudioFileDecoder(Common::Path &path)
 		: AudioDecoder() {
 	_path = path;
 }
@@ -805,12 +804,12 @@ Audio::AudioStream *AudioFileDecoder::getAudioStream(bool looping, bool forPuppe
 	if (_path.empty())
 		return nullptr;
 
-	Common::Path filePath = Common::Path(pathMakeRelative(_path), g_director->_dirSeparator);
+	Common::Path filePath = pathMakeRelative(_path);
 
 	Common::SeekableReadStream *copiedStream = Common::MacResManager::openFileOrDataFork(filePath);
 
 	if (copiedStream == nullptr) {
-		warning("Failed to open %s", _path.c_str());
+		warning("ROLAND: Failed to open %s", _path.toString().c_str());
 		return nullptr;
 	}
 
@@ -827,7 +826,7 @@ Audio::AudioStream *AudioFileDecoder::getAudioStream(bool looping, bool forPuppe
 				(magic2 == MKTAG('A', 'I', 'F', 'F') || magic2 == MKTAG('A', 'I', 'F', 'C'))) {
 		stream = Audio::makeAIFFStream(copiedStream, disposeAfterUse);
 	} else {
-		warning("Unknown file type for %s", _path.c_str());
+		warning("Unknown file type for %s", _path.toString().c_str());
 		delete copiedStream;
 	}
 

@@ -176,7 +176,7 @@ public:
 	~DirectorSound();
 
 	SoundChannel *getChannel(uint8 soundChannel);
-	void playFile(Common::String filename, uint8 soundChannel);
+	void playFile(Common::Path filename, uint8 soundChannel);
 	void playMCI(Audio::AudioStream &stream, uint32 from, uint32 to);
 	void playStream(Audio::AudioStream &stream, uint8 soundChannel);
 	void playSound(SoundID soundId, uint8 soundChannel, bool forPuppet = false);
@@ -251,15 +251,15 @@ private:
 
 class AudioFileDecoder : public AudioDecoder {
 public:
-	AudioFileDecoder(Common::String &path);
+	AudioFileDecoder(Common::Path &path);
 	~AudioFileDecoder();
 
-	void setPath(Common::String &path);
+	void setPath(Common::Path &path);
 
 	Audio::AudioStream *getAudioStream(bool looping = false, bool forPuppet = false, DisposeAfterUse::Flag disposeAfterUse = DisposeAfterUse::YES) override;
 
 private:
-	Common::String _path;
+	Common::Path _path;
 	Common::MacResManager *_macresman;
 };
 

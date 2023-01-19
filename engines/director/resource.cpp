@@ -50,7 +50,7 @@ Common::Error Window::loadInitialMovie() {
 	debug(0, "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	debug(0, "@@@@   Loading initial movie");
 	debug(0, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
-	Common::String movie = (_vm->getGameGID() == GID_TESTALL) ? getNextMovieFromQueue().movie : _vm->getEXEName();
+	Common::Path movie = (_vm->getGameGID() == GID_TESTALL) ? getNextMovieFromQueue().movie : _vm->getEXEName();
 
 	loadINIStream();
 	_mainArchive = openArchive(movie);
@@ -62,12 +62,12 @@ Common::Error Window::loadInitialMovie() {
 
 	_currentMovie = new Movie(this);
 	_currentPath = getPath(movie, _currentPath);
-	Common::String sharedCastPath = getSharedCastPath();
-	if (!sharedCastPath.empty() && !sharedCastPath.equalsIgnoreCase(movie))
+	Common::Path sharedCastPath = getSharedCastPath();
+	if (!sharedCastPath.empty() && sharedCastPath != movie)
 		_currentMovie->loadSharedCastsFrom(sharedCastPath);
 
 	// load startup movie
-	Common::String startupPath = g_director->getStartupPath();
+	Common::Path startupPath = g_director->getStartupPath();
 	if (!startupPath.empty()) {
 		Common::SeekableReadStream *const stream = SearchMan.createReadStreamForMember(startupPath);
 		if (stream) {
@@ -98,7 +98,7 @@ Common::Error Window::loadInitialMovie() {
 	return Common::kNoError;
 }
 
-void Window::probeProjector(const Common::String &movie) {
+void Window::probeProjector(const Common::Path &movie) {
 	if (g_director->getPlatform() == Common::kPlatformWindows)
 		return;
 
@@ -143,10 +143,10 @@ void Window::probeMacBinary(MacArchive *archive) {
 				error("No strings in Projector file");
 
 			Common::String sname = decodePlatformEncoding(name->readPascalString());
-			Common::String moviePath = pathMakeRelative(sname);
+			Common::Path moviePath = pathMakeRelative(sname);
 			if (testPath(moviePath)) {
 				_nextMovie.movie = moviePath;
-				warning("Replaced score name with: %s (from %s)", _nextMovie.movie.c_str(), sname.c_str());
+				warning("Replaced score name with: %s (from %s)", _nextMovie.movie.toString().c_str(), sname.c_str());
 
 				if (_currentMovie) {
 					delete _currentMovie;
@@ -191,8 +191,8 @@ void Window::probeMacBinary(MacArchive *archive) {
 	g_director->_allOpenResFiles.setVal(archive->getPathName(), archive);
 }
 
-Archive *Window::openArchive(const Common::String movie) {
-	debug(1, "openArchive(\"%s\")", movie.c_str());
+Archive *Window::openArchive(const Common::Path movie) {
+	debug(1, "openArchive(\"%s\")", movie.toString().c_str());
 
 	// If the archive is already open, don't reopen it;
 	// just init from the existing archive. This prevents errors that
@@ -237,8 +237,8 @@ void Window::loadINIStream() {
 	}
 }
 
-Archive *Window::loadEXE(const Common::String movie) {
-	Common::SeekableReadStream *exeStream = SearchMan.createReadStreamForMember(Common::Path(movie, g_director->_dirSeparator));
+Archive *Window::loadEXE(const Common::Path movie) {
+	Common::SeekableReadStream *exeStream = SearchMan.createReadStreamForMember(movie);
 	if (!exeStream) {
 		warning("Window::loadEXE(): Failed to open EXE '%s'", g_director->getEXEName().c_str());
 		return nullptr;
@@ -259,7 +259,7 @@ Archive *Window::loadEXE(const Common::String movie) {
 			return nullptr;
 		}
 	} else {
-		Common::WinResources *exe = Common::WinResources::createFromEXE(movie);
+		Common::WinResources *exe = Common::WinResources::createFromEXE(movie.toString(g_director->_dirSeparator));
 		if (!exe) {
 			warning("Window::loadEXE(): Failed to open EXE '%s'", g_director->getEXEName().c_str());
 			return nullptr;
@@ -466,7 +466,7 @@ Archive *Window::loadEXERIFX(Common::SeekableReadStream *stream, uint32 offset) 
 	return result;
 }
 
-Archive *Window::loadMac(const Common::String movie) {
+Archive *Window::loadMac(const Common::Path movie) {
 	Archive *result = nullptr;
 	if (g_director->getVersion() < 400) {
 		// The data is part of the resource fork of the executable
@@ -475,13 +475,13 @@ Archive *Window::loadMac(const Common::String movie) {
 		if (!result->openFile(movie)) {
 			delete result;
 			result = nullptr;
-			warning("Window::loadMac(): Could not open '%s'", movie.c_str());
+			warning("Window::loadMac(): Could not open '%s'", movie.toString().c_str());
 		}
 	} else {
 		// The RIFX is located in the data fork of the executable
-		Common::SeekableReadStream *dataFork = Common::MacResManager::openFileOrDataFork(Common::Path(movie, g_director->_dirSeparator));
+		Common::SeekableReadStream *dataFork = Common::MacResManager::openFileOrDataFork(movie);
 		if (!dataFork) {
-			warning("Window::loadMac(): Failed to open Mac binary '%s'", movie.c_str());
+			warning("Window::loadMac(): Failed to open Mac binary '%s'", movie.toString().c_str());
 			return nullptr;
 		}
 		result = new RIFXArchive();

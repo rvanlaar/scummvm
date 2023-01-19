@@ -107,7 +107,7 @@ void Movie::setArchive(Archive *archive) {
 	_movieArchive = archive;
 
 	if (archive->hasResource(MKTAG('M', 'C', 'N', 'M'), 0)) {
-		_macName = archive->getName(MKTAG('M', 'C', 'N', 'M'), 0).c_str();
+		_macName = Common::Path(archive->getName(MKTAG('M', 'C', 'N', 'M'), 0));
 	} else {
 		_macName = archive->getFileName();
 	}
@@ -292,13 +292,13 @@ void Movie::clearSharedCast() {
 	_sharedCast = nullptr;
 }
 
-void Movie::loadSharedCastsFrom(Common::String filename) {
+void Movie::loadSharedCastsFrom(Common::Path filename) {
 	clearSharedCast();
 
 	Archive *sharedCast = _vm->createArchive();
 
 	if (!sharedCast->openFile(filename)) {
-		warning("loadSharedCastsFrom(): No shared cast %s", filename.c_str());
+		warning("loadSharedCastsFrom(): No shared cast %s", filename.toString().c_str());
 
 		delete sharedCast;
 
@@ -307,7 +307,7 @@ void Movie::loadSharedCastsFrom(Common::String filename) {
 	sharedCast->setPathName(filename);
 
 	debug(0, "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	debug(0, "@@@@   Loading shared cast '%s'", filename.c_str());
+	debug(0, "@@@@   Loading shared cast '%s'", filename.toString().c_str());
 	debug(0, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 
 	_sharedCast = new Cast(this, 0, true);
