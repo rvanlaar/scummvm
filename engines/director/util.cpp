@@ -512,6 +512,8 @@ Common::Path wrappedPathMakeRelative(Common::Path path, bool recursive, bool add
 		initialPath = convertPath(initialPath_str);
 	}
 
+	initialPath_str = initialPath.toString(g_director->_dirSeparator);
+
 	debug(9, "wrappedPathMakeRelative(): s1 %s -> %s", path.toString(g_director->_dirSeparator).c_str(), initialPath_str.c_str());
 
 	initialPath = Common::Path(Common::normalizePath(g_director->getCurrentPath().appendComponent(initialPath_str).toString(g_director->_dirSeparator), g_director->_dirSeparator), g_director->_dirSeparator);
