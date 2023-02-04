@@ -314,6 +314,7 @@ public:
 	~Lingo();
 
 	void resetLingo();
+	void resetGo();
 	int getMenuNum();
 	int getMenuItemsNum(Datum &d);
 
