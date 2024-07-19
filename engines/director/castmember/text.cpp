@@ -562,7 +562,7 @@ bool TextCastMember::setField(int field, const Datum &d) {
 	if (field == kTheTextFont || field == kTheTextSize || field == kTheTextStyle) {
 		Common::Array<Channel *> channels = g_director->getCurrentMovie()->getScore()->_channels;
 		for (uint i = 0; i < channels.size(); i++) {
-			if (channels[i]->_sprite->_cast == this) {
+			if (channels[i]->_sprite->_castMember == this) {
 				toEdit = channels[i];
 				break;
 			}

@@ -2865,8 +2865,8 @@ void LB::b_spriteBox(int nargs) {
 		r > l ? r : l,
 		b > t ? b : t
 	);
-	if (channel->_sprite->_cast)
-		channel->_sprite->_cast->setModified(true);
+	if (channel->_sprite->_castMember)
+		channel->_sprite->_castMember->setModified(true);
 	channel->_dirty = true;
 }
 

@@ -60,7 +60,7 @@ void Sprite::reset() {
 	if (_matte)
 		delete _matte;
 	_matte = nullptr;
-	_cast = nullptr;
+	_castMember = nullptr;
 
 	_thickness = 0;
 	_width = 0;
@@ -102,7 +102,7 @@ Sprite& Sprite::operator=(const Sprite &sprite) {
 	_ink = sprite._ink;
 	_trails = sprite._trails;
 
-	_cast = sprite._cast;
+	_castMember = sprite._castMember;
 	_matte = nullptr;
 
 	_thickness = sprite._thickness;
@@ -209,7 +209,7 @@ Graphics::Surface *Sprite::getQDMatte() {
 }
 
 MacShape *Sprite::getShape() {
-	if (!isQDShape() && (_cast && _cast->_type != kCastShape))
+	if (!isQDShape() && (_castMember && _castMember->_type != kCastShape))
 		return nullptr;
 
 	MacShape *shape = new MacShape();
@@ -229,13 +229,13 @@ MacShape *Sprite::getShape() {
 	}
 
 	if (g_director->getVersion() >= 300 && shape->spriteType == kCastMemberSprite) {
-		if (!_cast) {
+		if (!_castMember) {
 			warning("Sprite::getShape(): kCastMemberSprite has no cast defined");
 			delete shape;
 			return nullptr;
 		}
 
-		ShapeCastMember *sc = (ShapeCastMember *)_cast;
+		ShapeCastMember *sc = (ShapeCastMember *)_castMember;
 		switch (sc->_shapeType) {
 		case kShapeRectangle:
 			shape->spriteType = sc->_fillType ? kRectangleSprite : kOutlinedRectangleSprite;
@@ -261,13 +261,13 @@ MacShape *Sprite::getShape() {
 }
 
 uint32 Sprite::getBackColor() {
-	if (!_cast)
+	if (!_castMember)
 		return _backColor;
 
-	switch (_cast->_type) {
+	switch (_castMember->_type) {
 	case kCastText:
 	case kCastButton: {
-		return _cast->getBackColor();
+		return _castMember->getBackColor();
 	}
 	default:
 		return _backColor;
@@ -275,13 +275,13 @@ uint32 Sprite::getBackColor() {
 }
 
 uint32 Sprite::getForeColor() {
-	if (!_cast)
+	if (!_castMember)
 		return _foreColor;
 
-	switch (_cast->_type) {
+	switch (_castMember->_type) {
 	case kCastText:
 	case kCastButton: {
-		return _cast->getForeColor();
+		return _castMember->getForeColor();
 	}
 	default:
 		return _foreColor;
@@ -289,18 +289,18 @@ uint32 Sprite::getForeColor() {
 }
 
 void Sprite::updateEditable() {
-	if (!_cast)
+	if (!_castMember)
 		return;
 
 	if (!_puppet)
-		_editable = _editable || _cast->isEditable();
+		_editable = _editable || _castMember->isEditable();
 }
 
 bool Sprite::respondsToMouse() {
 	if (_moveable)
 		return true;
 
-	if (_cast && _cast->_type == kCastButton)
+	if (_castMember && _castMember->_type == kCastButton)
 		return true;
 
 	ScriptContext *spriteScript = _movie->getScriptContext(kScoreScript, _scriptId);
@@ -321,7 +321,7 @@ bool Sprite::isActive() {
 	if (_moveable)
 		return true;
 
-	if (_cast && _cast->_type == kCastButton)
+	if (_castMember && _castMember->_type == kCastButton)
 		return true;
 
 	return _movie->getScriptContext(kScoreScript, _scriptId) != nullptr
@@ -338,16 +338,16 @@ bool Sprite::shouldHilite() {
 	if (_puppet)
 		return false;
 
-	if (_cast) {
+	if (_castMember) {
 		// Restrict to bitmap cast members.
 		// Buttons also hilite on click, but they have their own check.
-		if (_cast->_type != kCastBitmap)
+		if (_castMember->_type != kCastBitmap)
 			return false;
 
 		if (g_director->getVersion() >= 300) {
 			// The Auto Hilite flag was introduced in D3.
 
-			CastMemberInfo *castInfo = _cast->getInfo();
+			CastMemberInfo *castInfo = _castMember->getInfo();
 			if (castInfo)
 				return castInfo->autoHilite;
 
@@ -366,11 +366,11 @@ bool Sprite::shouldHilite() {
 }
 
 uint16 Sprite::getPattern() {
-	if (!_cast) {
+	if (!_castMember) {
 		if (isQDShape())
 			return _pattern;
-	} else if (_cast->_type == kCastShape) {
-		return ((ShapeCastMember *)_cast)->_pattern;
+	} else if (_castMember->_type == kCastShape) {
+		return ((ShapeCastMember *)_castMember)->_pattern;
 	}
 
 	return 0;
@@ -432,8 +432,8 @@ Common::Rect Sprite::getBbox(bool unstretched) {
 	Common::Rect result(_width, _height);
 	// If this is a cast member, use the cast member's getBbox function
 	// so we start with a rect containing the correct registration offset.
-	if (_cast)
-		result = _cast->getBbox(_width, _height);
+	if (_castMember)
+		result = _castMember->getBbox(_width, _height);
 
 	// The origin of the rect should be at the registration offset,
 	// e.g. for bitmap sprites this defaults to the centre.
@@ -449,8 +449,8 @@ void Sprite::setBbox(int l, int t, int r, int b) {
 	_height = b - t;
 
 	Common::Rect source(_width, _height);
-	if (_cast) {
-		source = _cast->getBbox(_width, _height);
+	if (_castMember) {
+		source = _castMember->getBbox(_width, _height);
 	}
 	_startPoint.x = (int16)(l - source.left);
 	_startPoint.y = (int16)(t - source.top);
@@ -477,7 +477,7 @@ bool Sprite::checkSpriteType() {
 	// check whether the sprite type match the cast type
 	// if it doesn't match, then we treat it as transparent
 	// this happens in warlock-mac data/stambul/c up
-	if (_spriteType == kBitmapSprite && !(_cast->_type == kCastBitmap || _cast->_type == kCastFilmLoop)) {
+	if (_spriteType == kBitmapSprite && !(_castMember->_type == kCastBitmap || _castMember->_type == kCastFilmLoop)) {
 		if (debugChannelSet(4, kDebugImages))
 			warning("Sprite::checkSpriteType: Didn't render sprite due to the sprite type mismatch with cast type");
 		return false;
@@ -500,16 +500,16 @@ void Sprite::setCast(CastMemberID memberID, bool replaceDims) {
 	 */
 
 	_castId = memberID;
-	_cast = _movie->getCastMember(_castId);
+	_castMember = _movie->getCastMember(_castId);
 	//As QDShapes don't have an associated cast, we must not change their _SpriteType.
 	if (g_director->getVersion() >= 400 && !isQDShape() && _castId != CastMemberID(0, 0))
 		_spriteType = kCastMemberSprite;
 
-	if (_cast) {
+	if (_castMember) {
 		if (g_director->getVersion() >= 400) {
 			// Set the sprite type to be more specific ONLY for bitmap or text.
 			// Others just use the generic kCastMemberSprite in D4.
-			switch (_cast->_type) {
+			switch (_castMember->_type) {
 			case kCastBitmap:
 				_spriteType = kBitmapSprite;
 				break;
@@ -522,8 +522,8 @@ void Sprite::setCast(CastMemberID memberID, bool replaceDims) {
 		}
 
 		if (replaceDims) {
-			Common::Rect dims = _cast->getInitialRect();
-			switch (_cast->_type) {
+			Common::Rect dims = _castMember->getInitialRect();
+			switch (_castMember->_type) {
 			case kCastShape:
 			case kCastText: 	// fall-through
 				break;

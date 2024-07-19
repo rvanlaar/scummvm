@@ -116,8 +116,8 @@ DirectorPlotData Channel::getPlotData() {
 
 	pd.srf = getSurface();
 	if (_sprite->_spriteType == kBitmapSprite &&
-		_sprite->_cast && _sprite->_cast->_type == kCastBitmap &&
-		((BitmapCastMember *)_sprite->_cast)->_bitsPerPixel == 1) {
+		_sprite->_castMember && _sprite->_castMember->_type == kCastBitmap &&
+		((BitmapCastMember *)_sprite->_castMember)->_bitsPerPixel == 1) {
 		// Add override flag for 1-bit images
 		pd.oneBitImage = true;
 	}
@@ -141,7 +141,7 @@ Graphics::ManagedSurface *Channel::getSurface() {
 }
 
 const Graphics::Surface *Channel::getMask(bool forceMatte) {
-	if (!_sprite->_cast || _sprite->_spriteType == kTextSprite)
+	if (!_sprite->_castMember || _sprite->_spriteType == kTextSprite)
 		return nullptr;
 
 	bool needsMatte = _sprite->_ink == kInkTypeMatte ||
@@ -164,8 +164,8 @@ const Graphics::Surface *Channel::getMask(bool forceMatte) {
 		// Mattes are only supported in bitmaps for now. Shapes don't need mattes,
 		// as they already have all non-enclosed white pixels transparent.
 		// Matte on text has a trivial enough effect to not worry about implementing.
-		if (_sprite->_cast->_type == kCastBitmap) {
-			BitmapCastMember *bitmap = ((BitmapCastMember *)_sprite->_cast);
+		if (_sprite->_castMember->_type == kCastBitmap) {
+			BitmapCastMember *bitmap = ((BitmapCastMember *)_sprite->_castMember);
 			// 1-bit images only require a matte for the matte ink type
 			if (bitmap->_bitsPerPixel == 1 && _sprite->_ink != kInkTypeMatte) {
 				// 1-bit images will not blend with kInkTypeCopy, whereas 8-bit images will.
@@ -235,8 +235,8 @@ const Graphics::Surface *Channel::getMask(bool forceMatte) {
 // since we didn't handle sprites very well for text cast members. thus we don't replace our text castmembers when only size changes
 // for explicitly changing, we have isModified to check
 bool hasTextCastMember(Sprite *sprite) {
-	if (sprite && sprite->_cast)
-		return sprite->_cast->_type == kCastText || sprite->_cast->_type == kCastButton;
+	if (sprite && sprite->_castMember)
+		return sprite->_castMember->_type == kCastText || sprite->_castMember->_type == kCastButton;
 	return false;
 }
 
@@ -248,7 +248,7 @@ bool Channel::isDirty(Sprite *nextSprite) {
 		return false;
 
 	bool isDirtyFlag = _dirty ||
-		(_sprite->_cast && _sprite->_cast->isModified());
+		(_sprite->_castMember && _sprite->_castMember->isModified());
 
 	if (_sprite && !_sprite->_puppet && !_sprite->_autoPuppet) {
 		// When puppet is set, the overall dirty flag should be set when sprite is
@@ -292,8 +292,8 @@ bool Channel::isMouseIn(const Common::Point &pos) {
 		return false;
 
 	if (_sprite->_ink == kInkTypeMatte) {
-		if (_sprite->_cast && _sprite->_cast->_type == kCastBitmap) {
-			Graphics::Surface *matte = ((BitmapCastMember *)_sprite->_cast)->getMatte(bbox);
+		if (_sprite->_castMember && _sprite->_castMember->_type == kCastBitmap) {
+			Graphics::Surface *matte = ((BitmapCastMember *)_sprite->_castMember)->getMatte(bbox);
 			return matte ? *(byte *)(matte->getBasePtr(pos.x - bbox.left, pos.y - bbox.top)) : true;
 		}
 	}
@@ -311,10 +311,10 @@ bool Channel::isMatteIntersect(Channel *channel) {
 	Graphics::Surface *myMatte = nullptr;
 	Graphics::Surface *yourMatte = nullptr;
 
-	if (_sprite->_cast && _sprite->_cast->_type == kCastBitmap)
-		myMatte = ((BitmapCastMember *)_sprite->_cast)->getMatte(myBbox);
-	if (channel->_sprite->_cast && channel->_sprite->_cast->_type == kCastBitmap)
-		yourMatte = ((BitmapCastMember *)channel->_sprite->_cast)->getMatte(yourBbox);
+	if (_sprite->_castMember && _sprite->_castMember->_type == kCastBitmap)
+		myMatte = ((BitmapCastMember *)_sprite->_castMember)->getMatte(myBbox);
+	if (channel->_sprite->_castMember && channel->_sprite->_castMember->_type == kCastBitmap)
+		yourMatte = ((BitmapCastMember *)channel->_sprite->_castMember)->getMatte(yourBbox);
 
 	if (myMatte && yourMatte) {
 		for (int i = intersectRect.top; i < intersectRect.bottom; i++) {
@@ -341,10 +341,10 @@ bool Channel::isMatteWithin(Channel *channel) {
 	Graphics::Surface *myMatte = nullptr;
 	Graphics::Surface *yourMatte = nullptr;
 
-	if (_sprite->_cast && _sprite->_cast->_type == kCastBitmap)
-		myMatte = ((BitmapCastMember *)_sprite->_cast)->getMatte(myBbox);
-	if (channel->_sprite->_cast && channel->_sprite->_cast->_type == kCastBitmap)
-		yourMatte = ((BitmapCastMember *)channel->_sprite->_cast)->getMatte(yourBbox);
+	if (_sprite->_castMember && _sprite->_castMember->_type == kCastBitmap)
+		myMatte = ((BitmapCastMember *)_sprite->_castMember)->getMatte(myBbox);
+	if (channel->_sprite->_castMember && channel->_sprite->_castMember->_type == kCastBitmap)
+		yourMatte = ((BitmapCastMember *)channel->_sprite->_castMember)->getMatte(yourBbox);
 
 	if (myMatte && yourMatte) {
 		for (int i = intersectRect.top; i < intersectRect.bottom; i++) {
@@ -363,7 +363,7 @@ bool Channel::isMatteWithin(Channel *channel) {
 }
 
 bool Channel::isActiveVideo() {
-	if (_sprite && (!_sprite->_cast || _sprite->_cast->_type != kCastDigitalVideo))
+	if (_sprite && (!_sprite->_castMember || _sprite->_castMember->_type != kCastDigitalVideo))
 		return false;
 
 	return true;
@@ -371,20 +371,20 @@ bool Channel::isActiveVideo() {
 
 void Channel::updateVideoTime() {
 	if (isActiveVideo())
-		_movieTime = ((DigitalVideoCastMember *)_sprite->_cast)->getMovieCurrentTime();
+		_movieTime = ((DigitalVideoCastMember *)_sprite->_castMember)->getMovieCurrentTime();
 }
 
 bool Channel::isVideoDirectToStage() {
-	if (!_sprite->_cast || _sprite->_cast->_type != kCastDigitalVideo)
+	if (!_sprite->_castMember || _sprite->_castMember->_type != kCastDigitalVideo)
 		return false;
 
-	return ((DigitalVideoCastMember *)_sprite->_cast)->_directToStage;
+	return ((DigitalVideoCastMember *)_sprite->_castMember)->_directToStage;
 }
 
 void Channel::setCast(CastMemberID memberID) {
 	// release previous widget
-	if (_sprite->_cast)
-		_sprite->_cast->releaseWidget();
+	if (_sprite->_castMember)
+		_sprite->_castMember->releaseWidget();
 
 	// Replace the cast member in the sprite.
 	// Only change the dimensions if the "stretch" flag is set,
@@ -416,14 +416,14 @@ void Channel::setClean(Sprite *nextSprite, bool partial) {
 	bool spriteTypeChanged = _sprite->_spriteType != nextSprite->_spriteType;
 
 	if (nextSprite) {
-		if (nextSprite->_cast && (_dirty || _sprite->_castId != nextSprite->_castId)) {
-			if (_sprite->_castId != nextSprite->_castId && nextSprite->_cast->_type == kCastDigitalVideo) {
-				if (((DigitalVideoCastMember *)nextSprite->_cast)->loadVideoFromCast()) {
+		if (nextSprite->_castMember && (_dirty || _sprite->_castId != nextSprite->_castId)) {
+			if (_sprite->_castId != nextSprite->_castId && nextSprite->_castMember->_type == kCastDigitalVideo) {
+				if (((DigitalVideoCastMember *)nextSprite->_castMember)->loadVideoFromCast()) {
 					_movieTime = 0;
-					((DigitalVideoCastMember *)nextSprite->_cast)->setChannel(this);
-					((DigitalVideoCastMember *)nextSprite->_cast)->startVideo();
+					((DigitalVideoCastMember *)nextSprite->_castMember)->setChannel(this);
+					((DigitalVideoCastMember *)nextSprite->_castMember)->startVideo();
 				}
-			} else if (nextSprite->_cast->_type == kCastFilmLoop) {
+			} else if (nextSprite->_castMember->_type == kCastFilmLoop) {
 				// brand new film loop, reset the frame counter.
 				_filmLoopFrame = 1;
 			}
@@ -452,7 +452,7 @@ void Channel::setClean(Sprite *nextSprite, bool partial) {
 	updateGlobalAttr();
 
 	// reset the stop time when we are not playing video
-	if (_stopTime && (!_sprite->_cast || (_sprite->_cast && _sprite->_cast->_type != kCastDigitalVideo)))
+	if (_stopTime && (!_sprite->_castMember || (_sprite->_castMember && _sprite->_castMember->_type != kCastDigitalVideo)))
 		_stopTime = 0;
 
 	_dirty = false;
@@ -466,8 +466,8 @@ void Channel::setStretch(bool enabled) {
 		g_director->getCurrentWindow()->addDirtyRect(getBbox());
 		_dirty = true;
 
-		if (_sprite->_cast) {
-			Common::Rect bbox = _sprite->_cast->getBbox();
+		if (_sprite->_castMember) {
+			Common::Rect bbox = _sprite->_castMember->getBbox();
 			_sprite->setWidth(bbox.width());
 			_sprite->setHeight(bbox.height());
 		}
@@ -478,7 +478,7 @@ void Channel::setStretch(bool enabled) {
 // this is used to for setting and updating text castmember
 // e.g. set editable, update dims for auto expanding
 void Channel::updateTextCast() {
-	if (!_sprite->_cast || _sprite->_cast->_type != kCastText)
+	if (!_sprite->_castMember || _sprite->_castMember->_type != kCastText)
 		return;
 
 	_sprite->updateEditable();
@@ -496,7 +496,7 @@ void Channel::updateTextCast() {
 }
 
 bool Channel::getEditable() {
-	if (_sprite->_cast && _sprite->_cast->_type == kCastText) {
+	if (_sprite->_castMember && _sprite->_castMember->_type == kCastText) {
 		if (_widget && (Graphics::MacText *)_widget->isEditable()) {
 			return true;
 		}
@@ -505,7 +505,7 @@ bool Channel::getEditable() {
 }
 
 void Channel::setEditable(bool editable) {
-	if (_sprite->_cast && _sprite->_cast->_type == kCastText) {
+	if (_sprite->_castMember && _sprite->_castMember->_type == kCastText) {
 		// if the sprite is editable, then we refresh the selEnd and setStart
 		if (_widget) {
 			((Graphics::MacText *)_widget)->setEditable(editable);
@@ -522,15 +522,15 @@ void Channel::setEditable(bool editable) {
 // we may optimize this by only update those attributes when we are changing them
 // but not to pass them to widgets everytime
 void Channel::updateGlobalAttr() {
-	if (!_sprite->_cast)
+	if (!_sprite->_castMember)
 		return;
 
 	// update text info, including selEnd and selStart
-	if (_sprite->_cast->_type == kCastText && _sprite->_editable && _widget)
+	if (_sprite->_castMember->_type == kCastText && _sprite->_editable && _widget)
 		((Graphics::MacText *)_widget)->setSelRange(g_director->getCurrentMovie()->_selStart, g_director->getCurrentMovie()->_selEnd);
 
 	// update button info, including checkBoxType
-	if ((_sprite->_cast->_type == kCastButton || isButtonSprite(_sprite->_spriteType)) && _widget) {
+	if ((_sprite->_castMember->_type == kCastButton || isButtonSprite(_sprite->_spriteType)) && _widget) {
 		((Graphics::MacButton *)_widget)->setCheckBoxType(g_director->getCurrentMovie()->_checkBoxType);
 		((Graphics::MacButton *)_widget)->setCheckBoxAccess(g_director->getCurrentMovie()->_checkBoxAccess);
 	}
@@ -540,20 +540,20 @@ void Channel::replaceSprite(Sprite *nextSprite) {
 	if (!nextSprite)
 		return;
 
-	bool widgetKeeped = _sprite->_cast && _widget;
+	bool widgetKeeped = _sprite->_castMember && _widget;
 
 	// if there's a video in the old sprite that's different, stop it before we continue
-	if (_sprite->_castId != nextSprite->_castId && _sprite->_cast && _sprite->_cast->_type == kCastDigitalVideo) {
-		((DigitalVideoCastMember *)_sprite->_cast)->setChannel(nullptr);
-		((DigitalVideoCastMember *)_sprite->_cast)->stopVideo();
-		((DigitalVideoCastMember *)_sprite->_cast)->rewindVideo();
+	if (_sprite->_castId != nextSprite->_castId && _sprite->_castMember && _sprite->_castMember->_type == kCastDigitalVideo) {
+		((DigitalVideoCastMember *)_sprite->_castMember)->setChannel(nullptr);
+		((DigitalVideoCastMember *)_sprite->_castMember)->stopVideo();
+		((DigitalVideoCastMember *)_sprite->_castMember)->rewindVideo();
 	}
 
 	// update the _sprite we stored in channel, and point the originalSprite to the new one
 	// release the widget, because we may having the new one
-	if (_sprite->_cast && !canKeepWidget(_sprite, nextSprite)) {
+	if (_sprite->_castMember && !canKeepWidget(_sprite, nextSprite)) {
 		widgetKeeped = false;
-		_sprite->_cast->releaseWidget();
+		_sprite->_castMember->releaseWidget();
 	}
 
 	// If the cast member is the same, persist the editable flag
@@ -596,14 +596,14 @@ void Channel::setPosition(int x, int y, bool force) {
 // here's the definition, we first need to have widgets to keep, and the cast is not modified(modified means we need to re-create the widget)
 // and the castId should be same while castId should not be zero
 bool Channel::canKeepWidget(CastMemberID castId) {
-	if (_widget && _sprite && _sprite->_cast && !_sprite->_cast->isModified() && castId.member && castId == _sprite->_castId) {
+	if (_widget && _sprite && _sprite->_castMember && !_sprite->_castMember->isModified() && castId.member && castId == _sprite->_castId) {
 		return true;
 	}
 	return false;
 }
 
 bool Channel::canKeepWidget(Sprite *currentSprite, Sprite *nextSprite) {
-	if (_widget && currentSprite && currentSprite->_cast && nextSprite && nextSprite->_cast && !currentSprite->_cast->isModified() && currentSprite->_castId == nextSprite->_castId && currentSprite->_castId.member) {
+	if (_widget && currentSprite && currentSprite->_castMember && nextSprite && nextSprite->_castMember && !currentSprite->_castMember->isModified() && currentSprite->_castId == nextSprite->_castId && currentSprite->_castId.member) {
 		return true;
 	}
 	return false;
@@ -627,7 +627,7 @@ void Channel::replaceWidget(CastMemberID previousCastId, bool force) {
 		_widget = nullptr;
 	}
 
-	if (_sprite && _sprite->_cast) {
+	if (_sprite && _sprite->_castMember) {
 		// use sprite type to guide us how to draw the cast
 		// if the type don't match, then we will set it as transparent. i.e. don't create widget
 		if (!_sprite->checkSpriteType())
@@ -637,14 +637,14 @@ void Channel::replaceWidget(CastMemberID previousCastId, bool force) {
 		// we need the original image to scale the sprite.
 		// for the scaled bitmap castmember, it has scaled dims on sprite size, so we don't have to worry about it.
 		Common::Rect bbox(getBbox(true));
-		_sprite->_cast->setModified(false);
+		_sprite->_castMember->setModified(false);
 
-		_widget = _sprite->_cast->createWidget(bbox, this, _sprite->_spriteType);
+		_widget = _sprite->_castMember->createWidget(bbox, this, _sprite->_spriteType);
 		if (_widget) {
 			_widget->_priority = _priority;
 			_widget->draw();
 
-			if (_sprite->_cast->_type == kCastText || _sprite->_cast->_type == kCastButton) {
+			if (_sprite->_castMember->_type == kCastText || _sprite->_castMember->_type == kCastButton) {
 
 				_sprite->_width = _widget->_dims.width();
 				_sprite->_height = _widget->_dims.height();
@@ -655,8 +655,8 @@ void Channel::replaceWidget(CastMemberID previousCastId, bool force) {
 
 bool Channel::updateWidget() {
 	if (_widget && _widget->needsRedraw()) {
-		if (_sprite->_cast) {
-			_sprite->_cast->updateFromWidget(_widget);
+		if (_sprite->_castMember) {
+			_sprite->_castMember->updateFromWidget(_widget);
 		}
 		_widget->draw();
 		return true;
@@ -722,19 +722,19 @@ int Channel::getMouseLine(int x, int y) {
 }
 
 bool Channel::hasSubChannels() {
-	if ((_sprite->_cast) && (_sprite->_cast->_type == kCastFilmLoop)) {
+	if ((_sprite->_castMember) && (_sprite->_castMember->_type == kCastFilmLoop)) {
 		return true;
 	}
 	return false;
 }
 
 Common::Array<Channel> *Channel::getSubChannels() {
-	if ((!_sprite->_cast) || (_sprite->_cast->_type != kCastFilmLoop)) {
+	if ((!_sprite->_castMember) || (_sprite->_castMember->_type != kCastFilmLoop)) {
 		warning("Channel doesn't have any sub-channels");
 		return nullptr;
 	}
 	Common::Rect bbox = getBbox();
-	return ((FilmLoopCastMember *)_sprite->_cast)->getSubChannels(bbox, this);
+	return ((FilmLoopCastMember *)_sprite->_castMember)->getSubChannels(bbox, this);
 }
 
 } // End of namespace Director

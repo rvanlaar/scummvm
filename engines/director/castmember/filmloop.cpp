@@ -108,7 +108,7 @@ Common::Array<Channel> *FilmLoopCastMember::getSubChannels(Common::Rect &bbox, C
 	// copy the sprites in order to the list
 	for (auto &iter : spriteIds) {
 		Sprite src = _frames[channel->_filmLoopFrame].sprites[iter];
-		if (!src._cast)
+		if (!src._castMember)
 			continue;
 		// translate sprite relative to the global bounding box
 		int16 relX = (src._startPoint.x - _initialRect.left) * widgetRect.width() / _initialRect.width();
@@ -222,8 +222,8 @@ void FilmLoopCastMember::loadFilmLoopDataD2(Common::SeekableReadStreamEndian &st
 
 			s._value.setCast(s._value._castId);
 			Common::Point topLeft = s._value._startPoint;
-			if (s._value._cast) {
-				topLeft -= s._value._cast->getRegistrationOffset(s._value._width, s._value._height);
+			if (s._value._castMember) {
+				topLeft -= s._value._castMember->getRegistrationOffset(s._value._width, s._value._height);
 			}
 			Common::Rect spriteBbox(
 				topLeft.x,
@@ -346,8 +346,8 @@ void FilmLoopCastMember::loadFilmLoopDataD4(Common::SeekableReadStreamEndian &st
 
 			s._value.setCast(s._value._castId);
 			Common::Point topLeft = s._value._startPoint;
-			if (s._value._cast) {
-				topLeft -= s._value._cast->getRegistrationOffset(s._value._width, s._value._height);
+			if (s._value._castMember) {
+				topLeft -= s._value._castMember->getRegistrationOffset(s._value._width, s._value._height);
 			}
 			Common::Rect spriteBbox(
 				topLeft.x,

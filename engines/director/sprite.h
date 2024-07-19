@@ -115,7 +115,7 @@ public:
 
 	CastMemberID _castId;
 	uint16 _pattern;
-	CastMember *_cast;
+	CastMember *_castMember;
 
 	byte _thickness;
 

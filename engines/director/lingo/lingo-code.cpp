@@ -1918,7 +1918,7 @@ void LC::c_hilite() {
 		return;
 
 	Channel *channel = score->getChannelById(spriteId);
-	if (channel->_sprite->_cast && channel->_sprite->_cast->_type == kCastText && channel->_widget) {
+	if (channel->_sprite->_castMember && channel->_sprite->_castMember->_type == kCastText && channel->_widget) {
 		((Graphics::MacText *)channel->_widget)->setSelection(start, true);
 		((Graphics::MacText *)channel->_widget)->setSelection(end, false);
 	}

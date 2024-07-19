@@ -765,8 +765,8 @@ bool Score::renderTransition(uint16 frameId, RenderMode mode) {
 
 void Score::incrementFilmLoops() {
 	for (auto &it : _channels) {
-		if (it->_sprite->_cast && it->_sprite->_cast->_type == kCastFilmLoop) {
-			FilmLoopCastMember *fl = ((FilmLoopCastMember *)it->_sprite->_cast);
+		if (it->_sprite->_castMember && it->_sprite->_castMember->_type == kCastFilmLoop) {
+			FilmLoopCastMember *fl = ((FilmLoopCastMember *)it->_sprite->_castMember);
 			if (!fl->_frames.empty()) {
 				// increment the film loop counter
 				it->_filmLoopFrame += 1;
@@ -801,20 +801,20 @@ void Score::updateSprites(RenderMode mode) {
 		}
 
 		if (channel->isDirty(nextSprite) || widgetRedrawn || mode == kRenderForceUpdate) {
-			bool invalidCastMember = currentSprite && currentSprite->_spriteType == kCastMemberSprite && currentSprite->_cast == nullptr;
+			bool invalidCastMember = currentSprite && currentSprite->_spriteType == kCastMemberSprite && currentSprite->_castMember == nullptr;
 			if (currentSprite && !invalidCastMember && !currentSprite->_trails)
 				_window->addDirtyRect(channel->getBbox());
 
-			if (currentSprite && currentSprite->_cast && currentSprite->_cast->_erase) {
+			if (currentSprite && currentSprite->_castMember && currentSprite->_castMember->_erase) {
 				_movie->eraseCastMember(currentSprite->_castId);
-				currentSprite->_cast->_erase = false;
+				currentSprite->_castMember->_erase = false;
 
 				currentSprite->setCast(currentSprite->_castId);
 				nextSprite->setCast(nextSprite->_castId);
 			}
 
 			channel->setClean(nextSprite);
-			invalidCastMember = currentSprite ? (currentSprite->_spriteType == kCastMemberSprite && currentSprite->_cast == nullptr) : false;
+			invalidCastMember = currentSprite ? (currentSprite->_spriteType == kCastMemberSprite && currentSprite->_castMember == nullptr) : false;
 			// Check again to see if a video has just been started by setClean.
 			if (channel->isActiveVideo())
 				_movie->_videoPlayback = true;
@@ -1295,7 +1295,7 @@ void Score::renderCursor(Common::Point pos, bool forceUpdate) {
 void Score::updateWidgets(bool hasVideoPlayback) {
 	for (uint16 i = 0; i < _channels.size(); i++) {
 		Channel *channel = _channels[i];
-		CastMember *cast = channel->_sprite->_cast;
+		CastMember *cast = channel->_sprite->_castMember;
 		if (hasVideoPlayback)
 			channel->updateVideoTime();
 		if (cast && (cast->_type != kCastDigitalVideo || hasVideoPlayback) && cast->isModified()) {
@@ -1308,7 +1308,7 @@ void Score::updateWidgets(bool hasVideoPlayback) {
 void Score::invalidateRectsForMember(CastMember *member) {
 	for (uint16 i = 0; i < _channels.size(); i++) {
 		Channel *channel = _channels[i];
-		if (channel->_sprite->_cast == member) {
+		if (channel->_sprite->_castMember == member) {
 			_window->addDirtyRect(channel->getBbox());
 		}
 	}
@@ -1521,7 +1521,7 @@ bool Score::refreshPointersForCastMemberID(CastMemberID id) {
 	bool hit = false;
 	for (auto &it : _channels) {
 		if (it->_sprite->_castId == id) {
-			it->_sprite->_cast = nullptr;
+			it->_sprite->_castMember = nullptr;
 			it->setCast(id);
 			it->_dirty = true;
 			hit = true;
@@ -1530,7 +1530,7 @@ bool Score::refreshPointersForCastMemberID(CastMemberID id) {
 
 	for (auto &it : _currentFrame->_sprites) {
 		if (it->_castId == id) {
-			it->_cast = nullptr;
+			it->_castMember = nullptr;
 			it->setCast(id);
 			hit = true;
 		}

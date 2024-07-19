@@ -302,7 +302,7 @@ void Window::inkBlitFrom(Channel *channel, Common::Rect destRect, Graphics::Mana
 
 	uint32 renderStartTime = 0;
 	if (debugChannelSet(8, kDebugImages)) {
-		CastType castType = channel->_sprite->_cast ? channel->_sprite->_cast->_type : kCastTypeNull;
+		CastType castType = channel->_sprite->_castMember ? channel->_sprite->_castMember->_type : kCastTypeNull;
 		debugC(8, kDebugImages, "Window::inkBlitFrom(): updating %dx%d @ %d,%d -> %dx%d @ %d,%d, type: %s, cast: %s, ink: %d",
 				srcRect.width(), srcRect.height(), srcRect.left, srcRect.top,
 				destRect.width(), destRect.height(), destRect.left, destRect.top,
@@ -317,7 +317,7 @@ void Window::inkBlitFrom(Channel *channel, Common::Rect destRect, Graphics::Mana
 		pd.inkBlitSurface(srcRect, channel->getMask());
 	} else {
 		if (debugChannelSet(4, kDebugImages)) {
-			CastType castType = channel->_sprite->_cast ? channel->_sprite->_cast->_type : kCastTypeNull;
+			CastType castType = channel->_sprite->_castMember ? channel->_sprite->_castMember->_type : kCastTypeNull;
 			warning("Window::inkBlitFrom(): No source surface: spriteType: %d (%s), castType: %d (%s), castId: %s",
 				channel->_sprite->_spriteType, spriteType2str(channel->_sprite->_spriteType), castType, castType2str(castType),
 				channel->_sprite->_castId.asString().c_str());
