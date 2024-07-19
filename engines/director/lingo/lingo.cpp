@@ -1053,6 +1053,7 @@ int Datum::asInt() const {
 		// no-op
 		break;
 	case INT:
+	case CASTLIBREF:
 		res = u.i;
 		break;
 	case FLOAT:
@@ -1166,6 +1167,9 @@ Common::String Datum::asString(bool printonly) const {
 		break;
 	case PROPREF:
 		s = Common::String::format("property: #%s", u.s->c_str());
+		break;
+	case CASTLIBREF:
+		s = Common::String::format("castLib %d", u.i);
 		break;
 	case CASTREF:
 		s = Common::String::format("member %d of castLib %d", u.cast->member, u.cast->castLib);

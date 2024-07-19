@@ -132,6 +132,10 @@ public:
 	Common::String formatCastSummary(int castId);
 	PaletteV4 loadPalette(Common::SeekableReadStreamEndian &stream, int id);
 
+	bool hasProp(const Common::String &propName);
+	Datum getProp(const Common::String &propName);
+	bool setProp(const Common::String &propName, const Datum &value);
+
 private:
 	void loadScriptV2(Common::SeekableReadStreamEndian &stream, uint16 id);
 	void loadFontMap(Common::SeekableReadStreamEndian &stream);
@@ -184,6 +188,7 @@ private:
 	Common::Array<CastMember *> _loadQueue;
 
 	Common::String _macName;
+	Common::String _fileName;
 
 	Common::HashMap<uint16, CastMemberInfo *> _castsInfo;
 	Common::HashMap<Common::String, int, Common::IgnoreCase_Hash, Common::IgnoreCase_EqualTo> _castsNames;

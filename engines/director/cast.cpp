@@ -87,6 +87,8 @@ Cast::Cast(Movie *movie, uint16 castLibID, bool isShared, bool isExternal) {
 
 	_defaultPalette = CastMemberID(-1, -1);
 	_frameRate = 0;
+
+	_fileName = "";
 }
 
 Cast::~Cast() {
@@ -1117,6 +1119,20 @@ void Cast::loadCastData(Common::SeekableReadStreamEndian &stream, uint16 id, Res
 		free(data);
 	}
 }
+
+bool Cast::hasProp(const Common::String &propName) {
+	return (propName == "filename");
+}
+
+bool Cast::setProp(const Common::String &propName, const Datum &value) {
+
+	if (propName == "filename") {
+		_fileName = value.asString();
+		return true;
+	}
+	return false;
+}
+
 
 struct LingoContextEntry {
 	int32 index;

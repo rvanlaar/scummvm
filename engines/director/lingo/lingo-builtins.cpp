@@ -219,6 +219,7 @@ static BuiltinProto builtins[] = {
 	{ "version",		LB::b_version,		0, 0, 300, KBLTIN },	//		D3 k
 	// References
 	{ "cast",			LB::b_cast,			1, 1, 400, FBLTIN },	//			D4 f
+	{ "castlib",		LB::b_castlib,		1, 1, 500, FBLTIN }, 	//			D5 f
 	{ "member",			LB::b_member,		1, 2, 500, FBLTIN },	//				D5 f
 	{ "script",			LB::b_script,		1, 1, 400, FBLTIN },	//			D4 f
 	{ "window",			LB::b_window,		1, 1, 400, FBLTIN },	//			D4 f
@@ -3354,6 +3355,21 @@ void LB::b_cast(int nargs) {
 	res.type = CASTREF;
 	g_lingo->push(res);
 }
+
+void LB::b_castlib(int nargs) {
+	Datum castLibName = g_lingo->pop();
+	int libId = -1;
+	Movie *movie = g_director->getCurrentMovie();
+	libId = movie->getCastLibIDByName(castLibName.asString());
+	if (libId == -1)  {
+		g_lingo->lingoError("No match found for castlib %s", castLibName.asString());
+		return;
+	}
+	Datum res = libId;
+	res.type = CASTLIBREF;
+	g_lingo->push(res);
+}
+
 
 void LB::b_member(int nargs) {
 	Movie *movie = g_director->getCurrentMovie();

@@ -2154,6 +2154,18 @@ void Lingo::setObjectProp(Datum &obj, Common::String &propName, Datum &val) {
 		} else {
 			g_lingo->lingoError("Lingo::setObjectProp(): %s has no property '%s'", id.asString().c_str(), propName.c_str());
 		}
+	} else if (obj.type == CASTLIBREF) {
+		Movie *movie = _vm->getCurrentMovie();
+		if (!movie) {
+			g_lingo->lingoError("Lingo::setObjectProp(): No movie loaded");
+			return;
+		}
+
+		Cast *cast = movie->getCasts()->getVal(obj.asInt());
+		if (cast->hasProp(propName)) {
+			cast->setProp(propName, val);
+			return;
+		}
 	} else {
 		g_lingo->lingoError("Lingo::setObjectProp: Invalid object: %s", obj.asString(true).c_str());
 	}
