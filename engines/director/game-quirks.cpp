@@ -150,6 +150,12 @@ static void quirkTrekTechWin() {
 	fontMan->loadWindowsFont("TREKCON4.FON");
 }
 
+static void quirkTrekChairWin() {
+	Graphics::MacFontManager *fontMan = g_director->_wm->_fontMan;
+	fontMan->loadWindowsFont("TREKCAPT.FON");
+	fontMan->loadWindowsFont("TREKENCY.FON");
+}
+
 static void quirkTrekGuideTNGWin() {
 	Graphics::MacFontManager *fontMan = g_director->_wm->_fontMan;
 	fontMan->loadWindowsFont("OMNI2/TREKENCY.FON");
@@ -227,6 +233,7 @@ struct Quirk {
 	// Star Trek titles install fonts into the system
 	{ "trektech", Common::kPlatformWindows, &quirkTrekTechWin },
 	{ "trekguidetng", Common::kPlatformWindows, &quirkTrekGuideTNGWin },
+	{ "trekchair", Common::kPlatformWindows, &quirkTrekChairWin },
 
 	// Pippin game that uses Unix path separators rather than Mac
 	{ "pipcatalog", Common::kPlatformPippin, &quirkPipCatalog },
