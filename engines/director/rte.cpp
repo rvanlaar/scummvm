@@ -29,12 +29,14 @@
 namespace Director {
 
 RTE0::RTE0(Cast *cast, Common::SeekableReadStreamEndian &stream) : _cast(cast) {
-	data.resize(stream.size(), 0);
+	int64 size = MAX(stream.size(), (int64)1);
+	data.resize(size, 0);
 	stream.read(&data[0], stream.size());
 }
 
 RTE1::RTE1(Cast *cast, Common::SeekableReadStreamEndian &stream) : _cast(cast) {
-	data.resize(stream.size(), 0);
+	int64 size = MAX(stream.size(), (int64)1);
+	data.resize(size, 0);
 	stream.read(&data[0], stream.size());
 }
 

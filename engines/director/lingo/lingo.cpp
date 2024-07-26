@@ -1878,6 +1878,11 @@ CastMemberID Lingo::resolveCastMember(const Datum &memberID, const Datum &castLi
 			return CastMemberID(memberID.asInt(), castLib.asInt());
 		}
 		break;
+	case CASTREF:
+		// This shouldn't be here. 
+		// Set a breakpoint here for captain's chair.
+		return (CastMemberID) *memberID.u.cast;
+		break;
 	case VOID:
 		warning("Lingo::resolveCastMember: reference to VOID member ID");
 		break;

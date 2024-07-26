@@ -375,7 +375,13 @@ Datum Lingo::findVarV4(int varType, const Datum &id) {
 		}
 		break;
 	case 6: // field
-		res = id.asMemberID();
+		if (g_director->getVersion() >= 500) {
+			Datum memberId = g_lingo->pop();
+			CastMemberID resolved = g_lingo->resolveCastMember(memberId, id, kCastTypeAny);
+			res = Datum(resolved).asMemberID();
+		} else {
+			res = id.asMemberID();
+		}
 		res.type = FIELDREF;
 		break;
 	default:
@@ -729,11 +735,21 @@ void LC::cb_v4theentitypush() {
 		case kTEAItemId:
 			{
 				Datum id = g_lingo->pop();
-				if (entity == kTheCast && g_director->getVersion() >= 500) {
-					// For "the member", D5 and above have a lib ID followed by a member ID
-					// Pre-resolve them here.
-					CastMemberID resolved = g_lingo->resolveCastMember(g_lingo->pop(), id, kCastTypeAny);
-					id = Datum(resolved);
+				if (g_director->getVersion() >= 500) {
+					switch (entity) {
+						case kTheCast:
+						case kTheChunk:
+						case kTheField:
+							{
+								// D5 and above have a lib ID followed by a member ID
+								// Pre-resolve them here.
+								CastMemberID resolved = g_lingo->resolveCastMember(g_lingo->pop(), id, kCastTypeAny);
+								id = Datum(resolved);
+							}
+							break;
+						default:
+							break;
+					}
 				}
 				debugC(3, kDebugLingoExec, "cb_v4theentitypush: calling getTheEntity(%s, %s, %s)", g_lingo->entity2str(entity), id.asString(true).c_str(), g_lingo->field2str(field));
 				result = g_lingo->getTheEntity(entity, id, field);
@@ -889,6 +905,13 @@ void LC::cb_v4theentityassign() {
 	case kTEAItemId:
 		{
 			Datum id = g_lingo->pop();
+			if (entity == kTheCast && g_director->getVersion() >= 500) {
+				// For "the member", D5 and above have a lib ID followed by a member ID
+				// Pre-resolve them here.
+				CastMemberID resolved = g_lingo->resolveCastMember(g_lingo->pop(), id, kCastTypeAny);
+				id = Datum(resolved);
+			}
+
 			debugC(3, kDebugLingoExec, "cb_v4theentityassign: calling setTheEntity(%s, %s, %s, %s)", g_lingo->entity2str(entity), id.asString(true).c_str(), g_lingo->field2str(field), value.asString(true).c_str());
 			g_lingo->setTheEntity(entity, id, field, value);
 		}

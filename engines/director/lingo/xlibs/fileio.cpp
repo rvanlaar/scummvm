@@ -190,8 +190,8 @@ void FileIO::open(ObjectType type, const Common::Path &path) {
 }
 
 void FileIO::close(ObjectType type) {
-	FileObject::cleanupMethods();
-	g_lingo->_globalvars[xlibName] = Datum();
+	//FileObject::cleanupMethods();
+	//g_lingo->_globalvars[xlibName] = Datum();
 }
 
 // Initialization/disposal

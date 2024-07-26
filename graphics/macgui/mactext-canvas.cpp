@@ -976,6 +976,7 @@ void MacTextCanvas::recalcDims() {
 		// the computation. Calling Height() will return cached value!
 		_textMaxWidth = MAX(_textMaxWidth, getLineWidth(i, true));
 		y += MAX(getLineHeight(i), _interLinear);
+		y = MIN(y, 32000);
 	}
 
 	_textMaxHeight = y;
