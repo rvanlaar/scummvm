@@ -1852,12 +1852,21 @@ void Lingo::setTheSprite(Datum &id1, int field, Datum &d) {
 		else
 			warning("Setting movieTime for non-digital video");
 		break;
-	case kTheMovieTime:
-		channel->_movieTime = d.asInt();
+	case kTheMovieTime: {
+		int origTime = d.asInt();
+        int tempTime = MAX(1, origTime);
+        int origTempTime = tempTime;
+        if (tempTime > 1) {
+            tempTime = (tempTime / 5) * 5;
+        }
+        warning("origTime: %d origTempTime: %d tempTime: %d", origTime, origTempTime, tempTime);
+
+        channel->_movieTime = tempTime;
 		if (sprite->_cast->_type == kCastDigitalVideo)
 			((DigitalVideoCastMember *)sprite->_cast)->seekMovie(channel->_movieTime);
 		else
 			warning("Setting movieTime for non-digital video");
+		}
 		break;
 	case kThePattern:
 		if (d.asInt() != sprite->getPattern()) {
