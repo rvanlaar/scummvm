@@ -177,6 +177,7 @@ TheEntity entities[] = {					//	hasId  ver.	isFunction
 	{ kTheTrace,			"trace",			false, 400, false },	//			D4 p
 	{ kTheTraceLoad,		"traceLoad",		false, 400, false },	//			D4 p
 	{ kTheTraceLogFile,		"traceLogFile",		false, 400, false },	//			D4 p
+	{ kTheUpdateLock,		"updateLock",		false, 500, false},
 	{ kTheUpdateMovieEnabled,"updateMovieEnabled",false,400, false },//			D4 p
 	{ kTheVideoForWindowsPresent,	"videoForWindowsPresent",	false, 400, true },	//		D4 f
 	{ kTheWindow,			"window",			true,  400, false },	//			D4
@@ -276,7 +277,6 @@ const TheEntityField fields[] = {
 	{ kTheCast,		"paletteMapping",	kThePaletteMapping,	500 },//				D5 p
 	{ kTheCast,		"scriptsEnabled",	kTheScriptsEnabled,	500 },//				D5 p
 	{ kTheCast,		"scoreSelection",	kTheScoreSelection,	500 },//				D5 p
-	{ kTheCast,		"updateLock",		kTheUpdateLock,		500 },//				D5 p
 
 	// Bitmap fields
 	{ kTheCast,		"depth",		kTheDepth,		400 },//				D4 p
@@ -1045,6 +1045,10 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		d.type = STRING;
 		d.u.s = new Common::String(g_director->_traceLogFile.toString(Common::Path::kNativeSeparator));
 		break;
+	case kTheUpdateLock:
+		d = g_lingo->_updateLock;
+		warning("Getting kTheUpdateLock: %i", d.asInt());
+		break;
 	case kTheUpdateMovieEnabled:
 		d = g_lingo->_updateMovieEnabled;
 		break;
@@ -1374,6 +1378,10 @@ void Lingo::setTheEntity(int entity, Datum &id, int field, Datum &d) {
 			g_director->_traceLogFile.clear();
 		}
 	}
+		break;
+	case kTheUpdateLock:
+		g_lingo->_updateLock = bool(d.asInt());
+		warning("setting kTheUpdateLock %i", d.asInt());
 		break;
 	case kTheUpdateMovieEnabled:
 		g_lingo->_updateMovieEnabled = bool(d.asInt());
