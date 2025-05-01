@@ -1047,7 +1047,7 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		break;
 	case kTheUpdateLock:
 		d = g_lingo->_updateLock;
-		warning("Getting kTheUpdateLock: %i", d.asInt());
+		//warning("Getting kTheUpdateLock: %i", d.asInt());
 		break;
 	case kTheUpdateMovieEnabled:
 		d = g_lingo->_updateMovieEnabled;
@@ -1853,6 +1853,7 @@ void Lingo::setTheSprite(Datum &id1, int field, Datum &d) {
 			warning("Setting movieTime for non-digital video");
 		break;
 	case kTheMovieTime: {
+		/*
 		int origTime = d.asInt();
         int tempTime = MAX(1, origTime);
         int origTempTime = tempTime;
@@ -1860,10 +1861,11 @@ void Lingo::setTheSprite(Datum &id1, int field, Datum &d) {
             tempTime = (tempTime / 5) * 5;
         }
         warning("origTime: %d origTempTime: %d tempTime: %d", origTime, origTempTime, tempTime);
-
         channel->_movieTime = tempTime;
+        */
+		channel->_movieTime = d.asInt();
 		if (sprite->_cast->_type == kCastDigitalVideo)
-			((DigitalVideoCastMember *)sprite->_cast)->seekMovie(channel->_movieTime);
+			((DigitalVideoCastMember *)sprite->_cast)->setMovietime(channel->_movieTime);
 		else
 			warning("Setting movieTime for non-digital video");
 		}
@@ -1898,7 +1900,7 @@ void Lingo::setTheSprite(Datum &id1, int field, Datum &d) {
 	case kTheStartTime:
 		channel->_startTime = d.asInt();
 		if (sprite->_cast->_type == kCastDigitalVideo)
-			((DigitalVideoCastMember *)sprite->_cast)->seekMovie(channel->_startTime);
+			((DigitalVideoCastMember *)sprite->_cast)->setStartTime(channel->_startTime);
 		else
 			warning("Setting startTime for non-digital video");
 		break;

@@ -369,28 +369,34 @@ uint DigitalVideoCastMember::getMovieTotalTime() {
 	return ticks;
 }
 
-void DigitalVideoCastMember::seekMovie(int stamp) {
+void DigitalVideoCastMember::setMovietime(int ticks) {
 	if (!_video)
 		return;
+	_channel->_movieTime = ticks;
+	seekMovie(ticks);
+	_dirty = true;
+}
 
-	_channel->_startTime = stamp;
 
-	Audio::Timestamp dur = _video->getDuration();
+void DigitalVideoCastMember::setStartTime(int ticks) {
+	// Determines where the digital video starts
+	// a tick: 1/60th of a second
+	_channel->_startTime = ticks;
 
-	_video->seek(Audio::Timestamp(_channel->_startTime * 1000 / 60, dur.framerate()));
+	seekMovie(ticks);
 
 	if (_channel->_movieRate == 0.0) {
 		_getFirstFrame = true;
 	}
-
 	_dirty = true;
+
 }
 
-void DigitalVideoCastMember::setStopTime(int stamp) {
+void DigitalVideoCastMember::setStopTime(int ticks) {
 	if (!_video)
 		return;
 
-	_channel->_stopTime = stamp;
+	_channel->_stopTime = ticks;
 
 	Audio::Timestamp dur = _video->getDuration();
 
@@ -437,6 +443,20 @@ Common::String DigitalVideoCastMember::formatInfo() {
 		_looping, _crop, _center, _showControls
 	);
 }
+
+void DigitalVideoCastMember::seekMovie(int ticks) {
+	// stamp is in ticks: 1/60th of a second.
+	if (!_video)
+		return;
+
+	uint framerate= _video->getDuration().framerate();
+	uint msecs = _channel->_startTime * 1000 / 60;
+
+	_video->seek(Audio::Timestamp(msecs, framerate));
+
+	_dirty = true;
+}
+
 
 Common::Point DigitalVideoCastMember::getRegistrationOffset() {
 	return Common::Point(_initialRect.width() / 2, _initialRect.height() / 2);

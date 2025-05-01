@@ -55,10 +55,13 @@ public:
 	uint getMovieCurrentTime();
 	uint getDuration();
 	uint getMovieTotalTime();
-	void seekMovie(int stamp);
-	void setStopTime(int stamp);
+	void setStartTime(int ticks);
+	void setMovietime(int ticks);
+	void setStopTime(int ticks);
 	void setMovieRate(double rate);
 	void setFrameRate(int rate);
+	void seekMovie(int ticks);
+
 
 	bool hasField(int field) override;
 	Datum getField(int field) override;
