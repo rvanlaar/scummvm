@@ -374,6 +374,7 @@ void DigitalVideoCastMember::setMovietime(int ticks) {
 		return;
 	_channel->_movieTime = ticks;
 	seekMovie(ticks);
+	_getFirstFrame = true;
 	_dirty = true;
 }
 
@@ -433,14 +434,14 @@ void DigitalVideoCastMember::setFrameRate(int rate) {
 
 Common::String DigitalVideoCastMember::formatInfo() {
 	return Common::String::format(
-		"initialRect: %dx%d@%d,%d, boundingRect: %dx%d@%d,%d, filename: \"%s\", duration: %d, enableVideo: %d, enableSound: %d, looping: %d, crop: %d, center: %d, showControls: %d",
+		"initialRect: %dx%d@%d,%d, boundingRect: %dx%d@%d,%d, filename: \"%s\", duration: %d, enableVideo: %d, enableSound: %d, looping: %d, crop: %d, center: %d, showControls: %d, paused: %d",
 		_initialRect.width(), _initialRect.height(),
 		_initialRect.left, _initialRect.top,
 		_boundingRect.width(), _boundingRect.height(),
 		_boundingRect.left, _boundingRect.top,
 		_filename.c_str(), _duration,
 		_enableVideo, _enableSound,
-		_looping, _crop, _center, _showControls
+		_looping, _crop, _center, _showControls, _pausedAtStart
 	);
 }
 
