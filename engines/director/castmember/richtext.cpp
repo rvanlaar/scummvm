@@ -37,7 +37,7 @@ namespace Director {
 RichTextCastMember::RichTextCastMember(Cast *cast, uint16 castId, Common::SeekableReadStreamEndian &stream, uint16 version)
 		: CastMember(cast, castId, stream) {
 
-	if (version >= kFileVer500 && version < kFileVer600) {
+	if (version >= kFileVer500) {
 		_initialRect = Movie::readRect(stream);
 		_boundingRect = Movie::readRect(stream);
 		if (debugChannelSet(5, kDebugLoading)) {

@@ -537,7 +537,7 @@ bool Cast::loadConfig() {
 			for (int i = 0; i < 0x08; i++) {
 				stream->readByte();
 			}
-		} else if (_version >= kFileVer500 && _version < kFileVer600) {
+		} else if (_version >= kFileVer500) {
 			for (int i = 0; i < 0x08; i++) {
 				stream->readByte();
 			}
@@ -1027,7 +1027,7 @@ void Cast::loadCastData(Common::SeekableReadStreamEndian &stream, uint16 id, Res
 		}
 		castDataOffset = stream.pos();
 		castInfoOffset = stream.pos() + castDataSizeToRead;
-	} else if (_version >= kFileVer500 && _version < kFileVer600) {
+	} else if (_version >= kFileVer500) {
 		castType = stream.readUint32();
 		castInfoSize = stream.readUint32();
 		castDataSize = stream.readUint32();
@@ -1275,7 +1275,7 @@ void Cast::loadLingoContext(Common::SeekableReadStreamEndian &stream) {
 			ScriptContext *script = it._value;
 			if (script->_id >= 0 && !script->isFactory()) {
 				if (_lingoArchive->getScriptContext(script->_scriptType, script->_id)) {
-					error("Cast::loadLingoContext: Script already defined for type %s, id %d", scriptType2str(script->_scriptType), script->_id);
+					warning("YOLO MODE: Cast::loadLingoContext: Script already defined for type %s, id %d", scriptType2str(script->_scriptType), script->_id);
 				}
 				_lingoArchive->scriptContexts[script->_scriptType][script->_id] = script;
 				_lingoArchive->patchScriptHandler(script->_scriptType, CastMemberID(script->_id, _castLibID));

@@ -37,7 +37,7 @@ ScriptCastMember::ScriptCastMember(Cast *cast, uint16 castId, Common::SeekableRe
 
 	if (version < kFileVer400) {
 		error("Unhandled Script cast");
-	} else if (version >= kFileVer400 && version < kFileVer600) {
+	} else if (version >= kFileVer400) {
 		byte unk1 = stream.readByte();
 		byte type = stream.readByte();
 
@@ -59,8 +59,6 @@ ScriptCastMember::ScriptCastMember(Cast *cast, uint16 castId, Common::SeekableRe
 		debugC(3, kDebugLoading, "CASt: Script type: %s (%d), unk1: %d", scriptType2str(_scriptType), type, unk1);
 
 		assert(stream.pos() == stream.size()); // There should be no more data
-	} else {
-		warning("STUB: ScriptCastMember::ScriptCastMember(): Scripts not yet supported for version %d", version);
 	}
 }
 

@@ -99,7 +99,7 @@ BitmapCastMember::BitmapCastMember(Cast *cast, uint16 castId, Common::SeekableRe
 		_pitch *= _bitsPerPixel;
 		_pitch >>= 3;
 
-	} else if (version >= kFileVer400 && version < kFileVer600) {
+	} else if (version >= kFileVer400) {
 		_flags1 = flags1;
 		_pitch = stream.readUint16();
 		_pitch &= 0x0fff;
