@@ -355,7 +355,10 @@ uint DigitalVideoCastMember::getDuration() {
 uint DigitalVideoCastMember::getMovieCurrentTime() {
 	if (!_video)
 		return 0;
-	int ticks = 1 + ((_video->getTime() * 60 - 1)/1000);
+	uint32 videoTime = _video->getTime();
+	int ticks = videoTime * 60 /1000;
+	warning("videoTime: %d ticks: %d", videoTime, ticks);
+
 	int stamp = MIN<int>(ticks, getMovieTotalTime());
 
 	return stamp;
@@ -451,7 +454,8 @@ void DigitalVideoCastMember::seekMovie(int ticks) {
 		return;
 
 	uint framerate= _video->getDuration().framerate();
-	uint msecs = _channel->_startTime * 1000 / 60;
+	float temp = ticks * 1000;
+	uint msecs = ceil(temp / 60);
 
 	_video->seek(Audio::Timestamp(msecs, framerate));
 
