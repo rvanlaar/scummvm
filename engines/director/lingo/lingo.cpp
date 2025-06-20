@@ -1419,6 +1419,16 @@ int Datum::equalTo(const Datum &d, bool ignoreCase) const {
 	int alignType = g_lingo->getAlignedType(*this, d, true);
 
 	switch (alignType) {
+	case ARRAY:
+		if (u.farr->arr.size() != d.u.farr->arr.size()) {
+			return 0;
+		}
+		for (uint i = 0; i < u.farr->arr.size(); i++) {
+			if (u.farr->arr[i] == d.u.farr->arr[i]) {
+				return 0;
+			}
+		}
+		return 1;
 	case FLOAT:
 		return asFloat() == d.asFloat();
 	case INT:
@@ -1447,6 +1457,10 @@ int Datum::equalTo(const Datum &d, bool ignoreCase) const {
 
 bool Datum::operator==(const Datum &d) const {
 	return equalTo(d);
+}
+
+bool Datum::operator!=(const Datum &d) const {
+	return !equalTo(d);
 }
 
 bool Datum::operator>(const Datum &d) const {

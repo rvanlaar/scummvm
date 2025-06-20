@@ -184,6 +184,7 @@ struct Datum {	/* interpreter stack type */
 	uint32 compareTo(const Datum &d) const;
 
 	bool operator==(const Datum &d) const;
+	bool operator!=(const Datum &d) const;
 	bool operator>(const Datum &d) const;
 	bool operator<(const Datum &d) const;
 	bool operator>=(const Datum &d) const;
