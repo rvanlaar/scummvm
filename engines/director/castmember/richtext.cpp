@@ -21,6 +21,7 @@
 
 #include "common/stream.h"
 #include "graphics/macgui/macwidget.h"
+#include "graphics/macgui/macwindowmanager.h"
 
 #include "director/director.h"
 #include "director/cast.h"
@@ -30,6 +31,7 @@
 #include "director/picture.h"
 #include "director/rte.h"
 #include "director/score.h"
+#include "director/sprite.h"
 #include "director/window.h"
 #include "director/castmember/richtext.h"
 #include "director/lingo/lingo-the.h"
@@ -41,7 +43,21 @@ RichTextCastMember::RichTextCastMember(Cast *cast, uint16 castId, Common::Seekab
 
 	_pf32 = Graphics::PixelFormat(4, 8, 8, 8, 8, 24, 16, 8, 0);
 
-	if (version >= kFileVer500 && version < kFileVer1100) {
+	// Defaults of a new member (also kept by files that have no rich text data)
+	_initialRect = Common::Rect(0, 0, 360, 20);
+	_boundingRect = Common::Rect(0, 0, 360, 20);
+	_antialiasFlag = 1;
+	_cropFlags = 0;
+	_scrollPos = 0;
+	_antialiasFontSize = 12;
+	_displayHeight = 20;
+	_foreColor = _pf32.RGBToColor(0, 0, 0);
+	_bgColor = _pf32.RGBToColor(0xff, 0xff, 0xff);
+	_rteWidth = _rteHeight = 0;
+	_hasText = false;
+
+	// Director 5 reads the 34 bytes of rich text data only from file version 0x4BF on
+	if (version >= 0x4BF && version < kFileVer1100) {
 		if (debugChannelSet(5, kDebugLoading)) {
 			debugC(5, kDebugLoading, "RichTextCastMember():");
 			stream.hexdump(stream.size());
@@ -53,7 +69,11 @@ RichTextCastMember::RichTextCastMember(Cast *cast, uint16 castId, Common::Seekab
 		_cropFlags = stream.readByte();
 		_scrollPos = stream.readUint16BE();
 		_antialiasFontSize = stream.readUint16BE();
-		_displayHeight = stream.readUint16BE();
+		// Files before 0x4C1 from a Windows cast library store pageHeight little-endian
+		if (version < 0x4C1 && _cast->_platform != Common::kPlatformMacintosh)
+			_displayHeight = stream.readUint16LE();
+		else
+			_displayHeight = stream.readUint16BE();
 
 		uint8 r = 0, g = 0, b = 0;
 		stream.readByte(); // skip one byte
@@ -67,6 +87,10 @@ RichTextCastMember::RichTextCastMember(Cast *cast, uint16 castId, Common::Seekab
 		b = (stream.readUint16BE() >> 8);
 		_bgColor = _pf32.RGBToColor(r, g, b);
 
+		// A pageHeight below 1 falls back to the height of the second rectangle
+		if ((int16)_displayHeight < 1)
+			_displayHeight = _boundingRect.bottom - _boundingRect.top;
+
 		debugC(3, kDebugLoading, "  RichTextCastMember(): initialRect: [%s], boundingRect: [%s], antialiasFlag: 0x%02x, cropFlags: 0x%02x, scrollPos: %d, antialiasFontSize: %d, displayHeight: %d",
 			_initialRect.toString().c_str(),
 			_boundingRect.toString().c_str(),
@@ -76,7 +100,7 @@ RichTextCastMember::RichTextCastMember(Cast *cast, uint16 castId, Common::Seekab
 			_antialiasFontSize,
 			_displayHeight);
 		debugC(3, kDebugLoading, "  RichTextCastMember(): foreColor: 0x%08x, bgColor: 0x%08x", _foreColor, _bgColor);
-	} else {
+	} else if (version >= kFileVer1100) {
 		warning("STUB: RichTextCastMember: RTE not yet supported for version v%d (%d)", humanVersion(_cast->_version), _cast->_version);
 	}
 
@@ -91,7 +115,22 @@ RichTextCastMember::RichTextCastMember(Cast *cast, uint16 castId, RichTextCastMe
 	_type = kCastRichText;
 	_initialRect = source._initialRect;
 	_boundingRect = source._boundingRect;
+	_pf32 = source._pf32;
+	_antialiasFlag = source._antialiasFlag;
+	_cropFlags = source._cropFlags;
+	_scrollPos = source._scrollPos;
+	_antialiasFontSize = source._antialiasFontSize;
+	_displayHeight = source._displayHeight;
+	_foreColor = source._foreColor;
 	_bgColor = source._bgColor;
+	_plainText = source._plainText;
+	_rteWidth = source._rteWidth;
+	_rteHeight = source._rteHeight;
+	_coverage = source._coverage;
+	_coverageColors = source._coverageColors;
+	_hasText = source._hasText;
+	_picture = nullptr;
+	_pictureWithBg = nullptr;
 	if (cast == source._cast)
 		_children = source._children;
 
@@ -140,14 +179,21 @@ void RichTextCastMember::load() {
 	}
 	if (_cast->_loadedRTE1s.contains(rte1id)) {
 		const RTE1 *rte1 =  _cast->_loadedRTE1s.getVal(rte1id);
-		if (!rte1->data.empty())
-			_plainText = Common::U32String((const char *)&rte1->data[0], rte1->data.size(), g_director->getPlatformEncoding());
+		// The RTE1 text is Mac Roman, also in movies made on Windows
+		_hasText = !rte1->data.empty();
+		if (_hasText)
+			_plainText = Common::U32String((const char *)&rte1->data[0], rte1->data.size(), Common::kMacRoman);
 	} else {
 		warning("RichTextCastMember::load(): rte1tid %i isn't loaded, no plain text!", rte1id);
 	}
 	if (_cast->_loadedRTE2s.contains(rte2id)) {
 		_picture = new Picture();
 		const RTE2 *rte2 = _cast->_loadedRTE2s.getVal(rte2id);
+		byte r, g, b;
+		_pf32.colorToRGB(_foreColor, r, g, b);
+		rte2->decode((r << 16) | (g << 8) | b, _coverage, _coverageColors);
+		_rteWidth = rte2->_width;
+		_rteHeight = rte2->_height;
 		Graphics::ManagedSurface *surface = rte2->createSurface(_foreColor, _bgColor, _pf32, false);
 		if (surface) {
 			_picture->_surface.copyFrom(surface->rawSurface());
@@ -180,36 +226,100 @@ Graphics::MacWidget *RichTextCastMember::createWidget(Common::Rect &bbox, Channe
 	if (!bbox.width() || !bbox.height())
 		return nullptr;
 
-	// Check if we need to dither the image
-	int dstBpp = g_director->_wm->_pixelformat.bytesPerPixel;
-
+	// The stage drawing goes through drawToStage() (see Window::inkBlitFrom), which
+	// blends with the pixels already on the stage. The widget holds the opaque
+	// rendering (background and text, drawn 1:1, not stretched) for everything else.
 	Graphics::MacWidget *widget = new Graphics::MacWidget(g_director->getCurrentWindow()->getMacWindow(), bbox.left, bbox.top, bbox.width(), bbox.height(), g_director->_wm, false);
-
-	Graphics::Surface *dithered = nullptr;
-	Picture *src = _pictureWithBg;
-
-	if (channel->_sprite->_ink == kInkTypeBackgndTrans)
-		src = _picture;
-
-	if (dstBpp == 1) {
-		dithered = src->_surface.convertTo(g_director->_wm->_pixelformat, nullptr, 0, g_director->_wm->getPalette(), g_director->_wm->getPaletteSize());
-	}
-
-	// scale for drawing a different size sprite
-	copyStretchImg(
-		dithered ? dithered : &src->_surface,
-		widget->getSurface()->surfacePtr(),
-		_initialRect,
-		bbox,
-		g_director->_wm->getPalette()
-	);
-
-	if (dithered) {
-		dithered->free();
-		delete dithered;
-	}
+	Common::Rect local(bbox.width(), bbox.height());
+	renderInto(channel, local, Common::Point(0, 0), widget->getSurface(), true);
 
 	return widget;
+}
+
+void RichTextCastMember::drawToStage(Channel *channel, const Common::Rect &destRect, Graphics::ManagedSurface *dst) {
+	Common::Rect bbox = channel->getBbox();
+	renderInto(channel, destRect, Common::Point(bbox.left, bbox.top), dst, false);
+}
+
+void RichTextCastMember::renderInto(Channel *channel, const Common::Rect &destRect, const Common::Point &origin, Graphics::ManagedSurface *dst, bool forceOpaque) {
+	Sprite *sprite = channel->_sprite;
+	Graphics::MacWindowManager *wm = g_director->_wm;
+	const bool clut = dst->format.bytesPerPixel == 1;
+
+	// The sprite rectangle, in dst coordinates; the bitmap is drawn from its top-left corner
+	Common::Rect spriteRect(origin.x, origin.y, origin.x + channel->getBbox().width(), origin.y + channel->getBbox().height());
+
+	// Ink: blend (ink 32, or the sprite's blend flag) and background transparent (ink 36)
+	// draw no background; every other ink behaves like copy. The blend level is
+	// the score's blend byte >> 4, and it is subtracted from each pixel's coverage.
+	const bool blendInk = sprite->_ink == kInkTypeBlend || (sprite->_thickness & kTHasBlend);
+	const bool transparent = !forceOpaque && (blendInk || sprite->_ink == kInkTypeBackgndTrans);
+	const int level = (!forceOpaque && blendInk) ? (sprite->_blendAmount >> 4) : 0;
+
+	// Layout mode 1 (scrolling) keeps 16 pixels on the right for the scroll bar.
+	// TODO: draw the scroll bar itself.
+	Common::Rect clip = spriteRect;
+	if (_cropFlags == 1)
+		clip.right -= 16;
+	clip.clip(destRect);
+	clip.clip(Common::Rect(dst->w, dst->h));
+	if (clip.isEmpty())
+		return;
+
+	auto toNative = [&](byte r, byte g, byte b) -> uint32 {
+		return clut ? wm->findBestColor(r, g, b) : dst->format.RGBToColor(r, g, b);
+	};
+
+	if (!transparent) {
+		byte r, g, b;
+		_pf32.colorToRGB(_bgColor, r, g, b);
+		dst->fillRect(clip, toNative(r, g, b));
+	}
+
+	if (!_hasText || _coverage.empty())
+		return;
+
+	// The text rectangle is a window into the bitmap. In layout modes 1 and 2 its
+	// top moves down by scrollTop and its height is pageHeight. An empty window is
+	// the whole bitmap. Drawing starts at bitmap column |left|, row |top|.
+	Common::Rect window = _initialRect;
+	if (_cropFlags != 0) {
+		window.top = _initialRect.top + (int16)_scrollPos;
+		window.bottom = window.top + (int16)_displayHeight;
+	}
+	int winX = 0, winY = 0;
+	if (!window.isEmpty()) {
+		winX = ABS<int>(window.left);
+		winY = ABS<int>(window.top);
+	}
+
+	for (int y = clip.top; y < clip.bottom; y++) {
+		int sy = winY + (y - spriteRect.top);
+		if (sy < 0 || sy >= _rteHeight)
+			continue;
+		for (int x = clip.left; x < clip.right; x++) {
+			int sx = winX + (x - spriteRect.left);
+			if (sx < 0 || sx >= _rteWidth)
+				continue;
+			int k = _coverage[sy * _rteWidth + sx] - level;
+			if (k <= 0)
+				continue;
+			uint32 c = _coverageColors[sy * _rteWidth + sx];
+			byte r = (c >> 16) & 0xff, g = (c >> 8) & 0xff, b = c & 0xff;
+			if (k < 15) {
+				byte dr, dg, db;
+				uint32 d = dst->getPixel(x, y);
+				if (clut)
+					wm->getPaletteEntry(d, dr, dg, db);
+				else
+					dst->format.colorToRGB(d, dr, dg, db);
+				r = RTE2::blendChannel(r, dr, k);
+				g = RTE2::blendChannel(g, dg, k);
+				b = RTE2::blendChannel(b, db, k);
+			}
+			dst->setPixel(x, y, toNative(r, g, b));
+		}
+	}
 }
 
 bool RichTextCastMember::hasField(int field) {
@@ -232,7 +342,11 @@ Datum RichTextCastMember::getField(int field) {
 		d = Datum(Common::String(_plainText));
 		break;
 	case kThePageHeight:
+		d = Datum((int)(int16)_displayHeight);
+		break;
 	case kTheScrollTop:
+		d = Datum((int)(int16)_scrollPos);
+		break;
 	default:
 		d = CastMember::getField(field);
 		break;
@@ -247,8 +361,13 @@ void RichTextCastMember::setField(int field, const Datum &d) {
 		_plainText = Common::U32String(d.asString());
 		warning("STUB: RichTextCastMember::setField: text set to \"%s\", but won't rerender!", d.asString().c_str());
 		return;
-	case kThePageHeight:
 	case kTheScrollTop:
+		_scrollPos = (uint16)d.asInt();
+		_modified = true;
+		return;
+	case kThePageHeight:
+		warning("RichTextCastMember::setField: pageHeight is read-only");
+		return;
 	default:
 		break;
 	}

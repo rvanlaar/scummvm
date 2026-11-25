@@ -39,6 +39,7 @@
 #include "director/sound.h"
 #include "director/sprite.h"
 #include "director/castmember/castmember.h"
+#include "director/castmember/richtext.h"
 #include "director/debugger/debugtools.h"
 #include "graphics/managed_surface.h"
 
@@ -460,7 +461,11 @@ void Window::inkBlitFrom(Channel *channel, Common::Rect destRect, Graphics::Mana
 		renderStartTime = g_system->getMillis();
 	}
 
-	if (pd.ms) {
+	if (castType == kCastRichText && pd.srf) {
+		// Rich text blends each pixel of its coverage bitmap with the stage, and
+		// ignores the sprite ink except for background transparent and blend.
+		((RichTextCastMember *)channel->_sprite->_cast)->drawToStage(channel, destRect, blitTo);
+	} else if (pd.ms) {
 		pd.inkBlitShape(srcRect);
 	} else if (pd.srf) {
 		pd.inkBlitSurface(srcRect, channel->getMask());

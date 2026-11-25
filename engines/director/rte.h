@@ -58,7 +58,24 @@ public:
 	RTE2(Cast *cast, Common::SeekableReadStreamEndian &stream, uint16 id);
 	~RTE2();
 
+	/**
+	 * Decodes the coverage bitmap into one coverage value (0 = none .. 15 = full)
+	 * and one 0x00RRGGBB colour per pixel, row-major, _width x _height.
+	 * The colour starts as foreRGB and changes with every 0x1F code.
+	 */
+	void decode(uint32 foreRGB, Common::Array<byte> &coverage, Common::Array<uint32> &colors) const;
+
 	Graphics::ManagedSurface *createSurface(uint32 foreColor, uint32 bgColor, const Graphics::PixelFormat &pf, bool renderBg) const;
+
+	/**
+	 * Moves one 8-bit channel from dst towards src by k/15 (k = 1..14) with
+	 * Director's rounding: the result is rounded towards the lower of the two values.
+	 */
+	static byte blendChannel(byte src, byte dst, int k) {
+		if (src >= dst)
+			return dst + (src - dst) * k / 15;
+		return src + (dst - src) * (15 - k) / 15;
+	}
 
 	Cast *_cast;
 	uint16 _id;
