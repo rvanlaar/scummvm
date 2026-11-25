@@ -1181,6 +1181,9 @@ Datum Lingo::getTheEntity(int entity, Datum &id, int field) {
 		d.type = STRING;
 		d.u.s = new Common::String(g_director->_traceLogFile.toString(Common::Path::kNativeSeparator));
 		break;
+	case kTheUpdateLock:
+		d = Datum((int)movie->getWindow()->_updateLock);
+		break;
 	case kTheUpdateMovieEnabled:
 		d = g_lingo->_updateMovieEnabled;
 		break;
@@ -1538,6 +1541,9 @@ void Lingo::setTheEntity(int entity, Datum &id, int field, Datum &d) {
 			g_director->_traceLogFile.clear();
 		}
 	}
+		break;
+	case kTheUpdateLock:
+		movie->getScore()->setUpdateLock(d.asInt() != 0);
 		break;
 	case kTheUpdateMovieEnabled:
 		g_lingo->_updateMovieEnabled = bool(d.asInt());

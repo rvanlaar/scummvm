@@ -51,6 +51,7 @@
 #include "director/castmember/movie.h"
 #include "director/castmember/transition.h"
 #include "director/debugger/debugtools.h"
+#include "director/lingo/lingo-builtins.h"
 
 namespace Director {
 
@@ -807,7 +808,22 @@ void Score::update() {
 		return;
 
 	// Window is drawn between the prepareFrame and enterFrame events (Lingo in a Nutshell, p.100)
-	renderFrame(_curFrameNumber, kRenderModeNormal, sound1Changed, sound2Changed);
+	if (_window->_updateLock) {
+		// "the updateLock" (Director 5, also in projectors): the frame is entered
+		// and its channels are taken over, but nothing is drawn, and no sound,
+		// transition or palette of the frame is started until the lock is
+		// released. The release then draws the current frame in full, compared
+		// with the last frame that was shown.
+		debugC(2, kDebugLingoExec, "Score::update(): frame %d entered under the updateLock, not drawn", _curFrameNumber);
+		if (!_updateLockHeldFrame) {
+			_updateLockHeldFrame = true;
+			_updateLockSound1 = oldSound1;
+			_updateLockSound2 = oldSound2;
+		}
+		updateSprites(kRenderModeNormal);
+	} else {
+		renderFrame(_curFrameNumber, kRenderModeNormal, sound1Changed, sound2Changed);
+	}
 
 	// then call the stepMovie hook (if one exists)
 	// D4 and above only call it if _allowOutdatedLingo is enabled.
@@ -898,6 +914,34 @@ void Score::renderFrame(uint16 frameId, RenderMode mode, bool sound1Changed, boo
 	}
 	uint32 end = g_system->getMillis(false);
 	debugC(5, kDebugEvents, "Score::renderFrame() finished in %d millis", end - start);
+}
+
+void Score::setUpdateLock(bool on) {
+	debugC(2, kDebugLingoExec, "Score::setUpdateLock(%d) at frame %d", on, _curFrameNumber);
+	if (on) {
+		if (!_window->_updateLock)
+			_updateLockHeldFrame = false;
+		_window->_updateLock = true;
+	} else {
+		// Turning the lock off is a full updateStage in Director, even when the
+		// lock was not on; updateStage itself releases the lock.
+		LB::b_updateStage(0);
+		_window->_updateLock = false;
+	}
+}
+
+void Score::releaseUpdateLock() {
+	if (!_window->_updateLock)
+		return;
+	_window->_updateLock = false;
+	if (!_updateLockHeldFrame)
+		return;
+	_updateLockHeldFrame = false;
+
+	// Draw the frame that was entered while locked, as if it was entered now
+	bool sound1Changed = _updateLockSound1 != _currentFrame->_mainChannels.sound1;
+	bool sound2Changed = _updateLockSound2 != _currentFrame->_mainChannels.sound2;
+	renderFrame(_curFrameNumber, kRenderModeNormal, sound1Changed, sound2Changed);
 }
 
 bool Score::renderTransition(uint16 frameId, RenderMode mode) {

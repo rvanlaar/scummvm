@@ -131,6 +131,8 @@ public:
 
 	bool renderTransition(uint16 frameId, RenderMode mode);
 	void renderFrame(uint16 frameId, RenderMode mode = kRenderModeNormal, bool sound1Changed = true, bool sound2Changed = true);
+	void setUpdateLock(bool on);
+	void releaseUpdateLock();
 	void incrementFilmLoops();
 	void updateSprites(RenderMode mode = kRenderModeNormal, bool withClean = false);
 	bool renderPrePaletteCycle(RenderMode mode = kRenderModeNormal);
@@ -262,6 +264,12 @@ private:
 
 	int _previousBuildBotBuild = -1;
 	bool _firstRun = true;
+
+	// "the updateLock": whether a frame entry was held back while locked, and the
+	// sound channels of the last frame actually drawn before that
+	bool _updateLockHeldFrame = false;
+	CastMemberID _updateLockSound1;
+	CastMemberID _updateLockSound2;
 };
 
 } // End of namespace Director

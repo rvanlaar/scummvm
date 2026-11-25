@@ -3711,6 +3711,9 @@ void LB::b_updateStage(int nargs) {
 		return;
 	}
 
+	// updateStage also ends "the updateLock", drawing the frame it held back
+	score->releaseUpdateLock();
+
 	score->updateWidgets(movie->_videoPlayback);
 	if (window->_puppetTransition) {
 		window->playTransition(score->getCurrentFrameNum(), kRenderModeNormal, window->_puppetTransition->duration, window->_puppetTransition->area, window->_puppetTransition->chunkSize, window->_puppetTransition->type, score->_currentFrame->_mainChannels.scoreCachedPaletteId);

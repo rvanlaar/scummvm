@@ -244,6 +244,9 @@ public:
 	MovieReference _nextMovie;
 	Common::List<MovieReference> _movieStack;
 	bool _newMovieStarted;
+	// "the updateLock" (D5): while set, entering a frame draws nothing. It belongs to
+	// the window, so it is kept across "go to movie" as in Director.
+	bool _updateLock = false;
 	bool _newMovieFirstDraw;
 	bool _skipFrameAdvance;
 	bool _resetScreen;
