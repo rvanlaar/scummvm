@@ -439,16 +439,25 @@ XOBJSTUB(FileIO::m_setFilterMask, 0)
 void FileIO::m_readChar(int nargs) {
 	FileObject *me = static_cast<FileObject *>(g_lingo->_state->me.u.obj);
 
+	// The XObject (mReadChar) returns the character code, the Xtra (readChar)
+	// the character itself as a string, and EMPTY at the end of the file
+	// (despite its message table, which copies the XObject's description).
+	bool asString = me->getObjType() == kXtraObj;
+
 	if (!me->_inStream || me->_inStream->eos() || me->_inStream->err()) {
-		g_lingo->push(Datum(kErrorEOF));
+		g_lingo->push(asString ? Datum("") : Datum(kErrorEOF));
 		return;
 	}
 
 	int ch = me->_inStream->readByte();
 	if (me->_inStream->eos() || me->_inStream->err()) {
-		ch = kErrorEOF;
+		g_lingo->push(asString ? Datum("") : Datum(kErrorEOF));
+		return;
 	}
-	g_lingo->push(Datum(ch));
+	if (asString)
+		g_lingo->push(Datum(Common::String((char)ch)));
+	else
+		g_lingo->push(Datum(ch));
 }
 
 void FileIO::m_readLine(int nargs) {
