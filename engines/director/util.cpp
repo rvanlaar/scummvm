@@ -986,6 +986,16 @@ Common::Path findXLibPath(const Common::String &path, bool currentFolder, bool s
 	return result;
 }
 
+// A cast library named without an extension is only looked up as a cast file:
+// "MAIN" finds MAIN.CXT, never the movie MAIN.DXR
+Common::Path findCastPath(const Common::String &path, bool currentFolder, bool searchPaths) {
+	const char *extsD4[] = { ".CST", ".CXT", nullptr };
+	const char *extsD6[] = { ".CST", ".CXT", ".CCT", nullptr };
+
+	const char **exts = g_director->getVersion() < 600 ? extsD4 : extsD6;
+	return findPath(path, currentFolder, searchPaths, false, exts);
+}
+
 Common::Path findAudioPath(const Common::String &path, bool currentFolder, bool searchPaths) {
 	const char *exts[] = { ".AIF", ".WAV", nullptr };
 
