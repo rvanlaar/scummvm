@@ -20,6 +20,7 @@
  */
 
 #include "audio/decoders/aiff.h"
+#include "common/algorithm.h"
 #include "common/platform.h"
 #include "common/stream.h"
 #include "common/macresman.h"
@@ -563,23 +564,98 @@ uint DigitalVideoCastMember::getDuration() {
 }
 
 uint DigitalVideoCastMember::getTimeScale() {
-	uint result = MAX(0, g_director->getCurrentMovie()->getScore()->_currentDigitalVideoTimeScale);
-	// If the digitalVideoTimeScale gets set to 0, use the quicktime timescale default of 600
-	if (result == 0) {
-		result = 600;
+	// Video for Windows times are always in ticks
+	if (_videoType == kDVVideoForWindows)
+		return 60;
+
+	int scale = g_director->getCurrentMovie()->getScore()->_currentDigitalVideoTimeScale;
+	if (scale > 0)
+		return scale;
+
+	// 0 or less: QuickTime keeps the movie's own time scale
+	Video::QuickTimeDecoder *qt = dynamic_cast<Video::QuickTimeDecoder *>(_video);
+	if (qt && qt->getTimeScale() > 0)
+		return qt->getTimeScale();
+	return 600;
+}
+
+// Digital video times: Director converts between getTimeScale() units and the
+// video's own units (QuickTime movie units, AVI frames) and truncates both ways.
+// A native unit lasts secNum / secDen seconds.
+bool DigitalVideoCastMember::getNativeUnit(int64 &secNum, int64 &secDen) {
+	if (!_video || !_video->isVideoLoaded())
+		return false;
+
+	Video::QuickTimeDecoder *qt = dynamic_cast<Video::QuickTimeDecoder *>(_video);
+	if (qt && qt->getTimeScale() > 0) {
+		secNum = 1;
+		secDen = qt->getTimeScale();
+		return true;
 	}
-	return result;
+
+	if (_videoType == kDVVideoForWindows && _video->getFrameCount() > 0) {
+		Audio::Timestamp duration = _video->getDuration();
+		secNum = duration.totalNumberOfFrames();
+		secDen = (int64)duration.framerate() * _video->getFrameCount();
+		if (secNum > 0) {
+			int64 div = Common::gcd(secNum, secDen);
+			secNum /= div;
+			secDen /= div;
+			return true;
+		}
+	}
+
+	// Anything else: milliseconds
+	secNum = 1;
+	secDen = 1000;
+	return true;
+}
+
+int64 DigitalVideoCastMember::nativeToTime(int64 native) {
+	int64 secNum, secDen;
+	if (!getNativeUnit(secNum, secDen) || native <= 0)
+		return 0;
+	return native * secNum * getTimeScale() / secDen;
+}
+
+int64 DigitalVideoCastMember::timeToNative(int64 time) {
+	int64 secNum, secDen;
+	if (!getNativeUnit(secNum, secDen) || time <= 0)
+		return 0;
+	return MIN<int64>(time * secDen / (secNum * getTimeScale()), getNativeDuration());
+}
+
+int64 DigitalVideoCastMember::getNativePosition() {
+	int64 secNum, secDen;
+	if (!getNativeUnit(secNum, secDen))
+		return 0;
+	Audio::Timestamp time = _video->getTimestamp();
+	return (int64)time.totalNumberOfFrames() * secDen / ((int64)time.framerate() * secNum);
+}
+
+int64 DigitalVideoCastMember::getNativeDuration() {
+	int64 secNum, secDen;
+	if (!getNativeUnit(secNum, secDen))
+		return 0;
+	Audio::Timestamp duration = _video->getDuration();
+	return (int64)duration.totalNumberOfFrames() * secDen / ((int64)duration.framerate() * secNum);
+}
+
+Audio::Timestamp DigitalVideoCastMember::nativeToTimestamp(int64 native) {
+	int64 secNum, secDen;
+	if (!getNativeUnit(secNum, secDen))
+		return Audio::Timestamp(0, 0, 1);
+	return Audio::Timestamp(0, (uint)(MAX<int64>(0, native) * secNum), (uint)secDen);
+}
+
+void DigitalVideoCastMember::seekNative(int64 native) {
+	_video->seek(nativeToTimestamp(native));
 }
 
 uint DigitalVideoCastMember::getMovieCurrentTime() {
 	if (!_video)
 		return 0;
-	// Round up to ticks. getTime() is unsigned, so "1 + (ms * scale - 1) / 1000"
-	// would underflow to the end of the movie when the time is 0.
-	int ticks = (_video->getTime() * getTimeScale() + 999) / 1000;
-	int stamp = MIN<int>(ticks, getMovieTotalTime());
-
-	return stamp;
+	return (uint)nativeToTime(MIN<int64>(getNativePosition(), getNativeDuration()));
 }
 
 uint DigitalVideoCastMember::getMovieCurrentTimeMillis() {
@@ -595,9 +671,7 @@ uint DigitalVideoCastMember::getMovieCurrentTimeMillis() {
 uint DigitalVideoCastMember::getMovieTotalTime() {
 	if (!_video)
 		return 0;
-
-	int ticks = (_video->getDuration().msecs() * getTimeScale() + 999) / 1000;
-	return ticks;
+	return (uint)nativeToTime(getNativeDuration());
 }
 
 uint DigitalVideoCastMember::getMovieTotalTimeMillis() {
@@ -619,9 +693,7 @@ void DigitalVideoCastMember::seekMovie(int stamp) {
 
 	_channel->_startTime = stamp;
 
-	Audio::Timestamp dur = _video->getDuration();
-
-	_video->seek(Audio::Timestamp(_channel->_startTime * 1000 / getTimeScale(), dur.framerate()));
+	seekNative(timeToNative(_channel->_startTime));
 
 	if (_channel->_movieRate == 0.0) {
 		_getFirstFrame = true;
@@ -649,20 +721,14 @@ void DigitalVideoCastMember::setStopTime(int stamp) {
 
 	_channel->_stopTime = stamp;
 
-	Audio::Timestamp dur = _video->getDuration();
-
-	_video->setEndTime(Audio::Timestamp(_channel->_stopTime * 1000 / getTimeScale(), dur.framerate()));
+	_video->setEndTime(nativeToTimestamp(timeToNative(_channel->_stopTime)));
 }
 
 void DigitalVideoCastMember::setMovieTime(int units) {
 	if (!_video)
 		return;
 
-	// startTime and stopTime are always in ticks (1/60)
-	// movieTime and duration are always in scaling units (1/digitalVideoTimeScale)
-
-	Audio::Timestamp dur = _video->getDuration();
-	_video->seek(Audio::Timestamp(units * 1000 / getTimeScale(), dur.framerate()));
+	seekNative(timeToNative(units));
 
 	if (_channel->_movieRate == 0.0) {
 		_getFirstFrame = true;

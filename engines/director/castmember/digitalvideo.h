@@ -24,6 +24,10 @@
 
 #include "director/castmember/castmember.h"
 
+namespace Audio {
+class Timestamp;
+}
+
 namespace Video {
 class VideoDecoder;
 }
@@ -73,6 +77,18 @@ public:
 	void setMovieTime(int units);
 	void setMovieRate(double rate);
 	void setFrameRate(int rate);
+
+private:
+	// Exact time conversions, see "Digital video times" in digitalvideo.cpp
+	bool getNativeUnit(int64 &secNum, int64 &secDen);
+	int64 nativeToTime(int64 native);
+	int64 timeToNative(int64 time);
+	int64 getNativePosition();
+	int64 getNativeDuration();
+	void seekNative(int64 native);
+	Audio::Timestamp nativeToTimestamp(int64 native);
+
+public:
 	bool getTrackEnabled(int track);
 	void setTrackEnabled(int track, bool value);
 
