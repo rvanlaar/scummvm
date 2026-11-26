@@ -426,7 +426,10 @@ void DigitalVideoCastMember::startVideo() {
 	}
 
 	if (_pausedAtStart) {
+		// Show the first frame and stay paused: the movieRate of the sprite is 0
 		_getFirstFrame = true;
+		if (_channel)
+			_channel->_movieRate = 0.0;
 	} else {
 		if (_channel && _channel->_movieRate == 0.0)
 			_channel->_movieRate = 1.0;
