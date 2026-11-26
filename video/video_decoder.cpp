@@ -305,6 +305,13 @@ uint32 VideoDecoder::getTime() const {
 	return MAX<int>((_playbackRate * (g_system->getMillis() - _startTime)).toInt(), 0);
 }
 
+Audio::Timestamp VideoDecoder::getTimestamp() const {
+	if (!isPlaying())
+		return _lastTimeChange;
+
+	return Audio::Timestamp(getTime(), 1000);
+}
+
 uint32 VideoDecoder::getTimeToNextFrame() const {
 	if (endOfVideo() || _needsUpdate || !_nextVideoTrack)
 		return 0;

@@ -278,6 +278,14 @@ public:
 	 */
 	uint32 getTime() const;
 
+	/**
+	 * Returns the time position of the current video as a timestamp.
+	 * While the video is stopped this is the exact time it was last
+	 * seeked or stopped to, which getTime() rounds down to whole
+	 * milliseconds. While it is playing it is the same as getTime().
+	 */
+	Audio::Timestamp getTimestamp() const;
+
 
 	/////////////////////////////////////////
 	// Video Info
